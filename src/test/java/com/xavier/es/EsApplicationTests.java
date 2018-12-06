@@ -12,9 +12,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import java.text.ParseException;
 import java.util.*;
 
-/**
- * 单元测试
- */
+
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = EsApplication.class)
 public class EsApplicationTests {
