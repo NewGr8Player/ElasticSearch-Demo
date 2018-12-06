@@ -219,7 +219,7 @@ public class EsApplicationTests {
 	@Test
 	public void searchDataPage() {
 
-		EsPage esPage = ElasticsearchUtil.searchDataPage("test_index", "about_test", 10, 5, 0, 0, "", "processTime", false, "name,interests", "interests=学习,name=鹏磊");
+		EsPage esPage = ElasticsearchUtil.searchDataPage("test_index", "about_test", 10, 5, 0, 0, "", "processTime", false, "", "interests=学习,name=鹏磊");
 
 		System.out.println(JSONObject.toJSONString(esPage.getRecordList()));
 
