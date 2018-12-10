@@ -458,8 +458,8 @@ public class ElasticsearchUtil {
 			searchHit.getSourceAsMap().put("id", searchHit.getId());
 
 			//TODO 处理高亮文本显示
-			System.out.println("Source:" + searchHit.getSourceAsString());/* 源码 */
-			System.out.println("HighlightFields" + searchHit.getHighlightFields());/* 高亮 */
+			//System.out.println("Source:" + searchHit.getSourceAsString());/* 源码 */
+			//System.out.println("HighlightFields" + searchHit.getHighlightFields());/* 高亮 */
 
 			sourceList.add(searchHit.getSourceAsMap());
 		}

@@ -7,7 +7,11 @@ import org.apache.commons.lang3.time.DateUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpEntity;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 
 import java.text.ParseException;
 import java.util.*;
@@ -51,7 +55,7 @@ public class EsApplicationTests {
 		for (long i = 0; i < 100; i++) {
 			Map<String, Object> map = new HashMap<>();
 
-			map.put("name", "鹏磊" + i);
+			map.put("name", "晓晓No." + i + "");
 			map.put("age", i);
 			map.put("interests", new String[]{"阅读", "学习"});
 			map.put("about", "世界上没有优秀的理念，只有脚踏实地的结果");
@@ -85,7 +89,7 @@ public class EsApplicationTests {
 	public void updateDataByIdTest() {
 		Map<String, Object> map = new HashMap<>();
 
-		map.put("name", "鹏磊");
+		map.put("name", "晓晓");
 		map.put("age", 11);
 		map.put("interests", new String[]{"阅读", "学习"});
 		map.put("about", "这条数据被修改");
@@ -219,10 +223,27 @@ public class EsApplicationTests {
 	@Test
 	public void searchDataPage() {
 
-		EsPage esPage = ElasticsearchUtil.searchDataPage("test_index", "about_test", 10, 5, 0, 0, "", "processTime", false, "", "interests=学习,name=鹏磊");
+		EsPage esPage = ElasticsearchUtil.searchDataPage("test_index", "about_test", 10, 5, 0, 0, "", "processTime", false, "interests,name", "interests=学习,name=晓晓");
 
 		System.out.println(JSONObject.toJSONString(esPage.getRecordList()));
 
 	}
 
+	@Test
+	public void restRequestTest() {
+		/* 不建议使用这个方法！仅供本身查询使用 */
+		RestTemplate restTemplate = new RestTemplate();
+
+		String sql = "SELECT * FROM test_index";
+
+		MultiValueMap<String, Object> headers = new LinkedMultiValueMap<String, Object>();
+		headers.add("Accept", "application/json");
+		headers.add("Content-Type", "application/json");
+		String requestBody = "{\"sql\":\"" + sql + "\"}";
+		HttpEntity request = new HttpEntity(requestBody, headers);
+		Map apiResponse = restTemplate.postForObject("http://127.0.0.1:9200/_sql", request, Map.class);
+		if (null != apiResponse.get("hits") && null != apiResponse.get("hits")) {
+			System.out.println(apiResponse.get("hits"));
+		}
+	}
 }
