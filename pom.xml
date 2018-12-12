@@ -20,7 +20,15 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>1.8</java.version>
         <fastjson.version>1.2.54</fastjson.version>
+        <guava.version>27.0.1-jre</guava.version>
     </properties>
+
+    <repositories>
+        <repository>
+            <id>xavier-maven-repo</id>
+            <url>https://raw.githubusercontent.com/NewGr8Player/maven-repo/master/</url>
+        </repository>
+    </repositories>
 
     <dependencies>
         <!-- Web -->
@@ -28,10 +36,16 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
-        <!-- elasticsearch -->
+        <!-- Elasticsearch -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-elasticsearch</artifactId>
+        </dependency>
+        <!-- Guava -->
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>${guava.version}</version>
         </dependency>
         <!-- Commons-lang3 -->
         <dependency>
@@ -51,7 +65,13 @@
             <artifactId>lombok</artifactId>
             <optional>true</optional>
         </dependency>
-
+        <!-- canal-starter -->
+        <dependency>
+            <groupId>com.xavier</groupId>
+            <artifactId>starter-canal</artifactId>
+            <version>0.0.1-REALEASE</version>
+        </dependency>
+        <!-- Test -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
