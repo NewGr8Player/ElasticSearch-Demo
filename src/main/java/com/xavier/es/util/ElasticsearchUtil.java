@@ -17,10 +17,12 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.common.text.Text;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
 import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -237,37 +239,37 @@ public class ElasticsearchUtil {
 	/**
 	 * 使用分词查询
 	 *
-	 * @param index          索引名称
-	 * @param type           类型名称,可传入多个type逗号分隔
-	 * @param size           文档大小限制
-	 * @param fields         需要显示的字段，逗号分隔（缺省为全部字段）
-	 * @param sortField      排序字段
-	 * @param matchPhrase    true 使用，短语精准匹配
-	 * @param highlightField 高亮字段
-	 * @param matchStr       过滤条件（xxx=111,aaa=222）
+	 * @param index              索引名称
+	 * @param type               类型名称,可传入多个type逗号分隔
+	 * @param size               文档大小限制
+	 * @param fields             需要显示的字段，逗号分隔（缺省为全部字段）
+	 * @param sortField          排序字段
+	 * @param matchPhrase        true 使用，短语精准匹配
+	 * @param highlightFieldList 高亮字段
+	 * @param matchStr           过滤条件（xxx=111,aaa=222）
 	 * @return
 	 */
-	public static List<Map<String, Object>> searchListData(String index, String type, Integer size, String fields, String sortField, boolean matchPhrase, String highlightField, String matchStr) {
-		return searchListData(index, type, 0, 0, size, fields, sortField, matchPhrase, highlightField, matchStr);
+	public static List<Map<String, Object>> searchListData(String index, String type, Integer size, String fields, String sortField, boolean matchPhrase, List<String> highlightFieldList, String matchStr) {
+		return searchListData(index, type, 0, 0, size, fields, sortField, matchPhrase, highlightFieldList, matchStr);
 	}
 
 
 	/**
 	 * 使用分词查询
 	 *
-	 * @param index          索引名称
-	 * @param type           类型名称,可传入多个type逗号分隔
-	 * @param startTime      开始时间
-	 * @param endTime        结束时间
-	 * @param size           文档大小限制
-	 * @param fields         需要显示的字段，逗号分隔（缺省为全部字段）
-	 * @param sortField      排序字段
-	 * @param matchPhrase    true 使用，短语精准匹配
-	 * @param highlightField 高亮字段
-	 * @param matchStr       过滤条件（xxx=111,aaa=222）
+	 * @param index              索引名称
+	 * @param type               类型名称,可传入多个type逗号分隔
+	 * @param startTime          开始时间
+	 * @param endTime            结束时间
+	 * @param size               文档大小限制
+	 * @param fields             需要显示的字段，逗号分隔（缺省为全部字段）
+	 * @param sortField          排序字段
+	 * @param matchPhrase        true 使用，短语精准匹配
+	 * @param highlightFieldList 高亮字段
+	 * @param matchStr           过滤条件（xxx=111,aaa=222）
 	 * @return
 	 */
-	public static List<Map<String, Object>> searchListData(String index, String type, long startTime, long endTime, Integer size, String fields, String sortField, boolean matchPhrase, String highlightField, String matchStr) {
+	public static List<Map<String, Object>> searchListData(String index, String type, long startTime, long endTime, Integer size, String fields, String sortField, boolean matchPhrase, List<String> highlightFieldList, String matchStr) {
 
 		SearchRequestBuilder searchRequestBuilder = client.prepareSearch(index);
 		if (StringUtils.isNotEmpty(type)) {
@@ -299,15 +301,14 @@ public class ElasticsearchUtil {
 			}
 		}
 
-		// 高亮（xxx=111,aaa=222）
-		if (StringUtils.isNotEmpty(highlightField)) {
+
+		if (null != highlightFieldList && !highlightFieldList.isEmpty()) {
 			HighlightBuilder highlightBuilder = new HighlightBuilder();
-
-			//highlightBuilder.preTags("<span style='color:red' >");//设置前缀
-			//highlightBuilder.postTags("</span>");//设置后缀
-
-			// 设置高亮字段
-			highlightBuilder.field(highlightField);
+			highlightBuilder.preTags("<span style='color:red' >");//设置前缀
+			highlightBuilder.postTags("</span>");//设置后缀
+			for (String field : highlightFieldList) {
+				highlightBuilder.field(field);
+			}
 			searchRequestBuilder.highlighter(highlightBuilder);
 		}
 
@@ -349,20 +350,20 @@ public class ElasticsearchUtil {
 	/**
 	 * 使用分词查询,并分页
 	 *
-	 * @param index           索引名称
-	 * @param type            类型名称,可传入多个type逗号分隔
-	 * @param currentPage     当前页
-	 * @param pageSize        每页显示条数
-	 * @param startTime       开始时间
-	 * @param endTime         结束时间
-	 * @param fields          需要显示的字段，逗号分隔（缺省为全部字段）
-	 * @param sortField       排序字段
-	 * @param matchPhrase     true 使用，短语精准匹配
-	 * @param highlightFields 高亮字段
-	 * @param matchStr        过滤条件（xxx=111,aaa=222）
+	 * @param index              索引名称
+	 * @param type               类型名称,可传入多个type逗号分隔
+	 * @param currentPage        当前页
+	 * @param pageSize           每页显示条数
+	 * @param startTime          开始时间
+	 * @param endTime            结束时间
+	 * @param fields             需要显示的字段，逗号分隔（缺省为全部字段）
+	 * @param sortField          排序字段
+	 * @param matchPhrase        true 使用，短语精准匹配
+	 * @param highlightFieldList 高亮字段
+	 * @param matchStr           过滤条件（xxx=111,aaa=222）
 	 * @return
 	 */
-	public static EsPage searchDataPage(String index, String type, int currentPage, int pageSize, long startTime, long endTime, String fields, String sortField, boolean matchPhrase, String highlightFields, String matchStr) {
+	public static EsPage searchDataPage(String index, String type, int currentPage, int pageSize, long startTime, long endTime, String fields, String sortField, boolean matchPhrase, List<String> highlightFieldList, String matchStr) {
 		SearchRequestBuilder searchRequestBuilder = client.prepareSearch(index);
 		if (StringUtils.isNotEmpty(type)) {
 			searchRequestBuilder.setTypes(type.split(","));
@@ -404,14 +405,11 @@ public class ElasticsearchUtil {
 		searchRequestBuilder.setQuery(QueryBuilders.matchAllQuery());
 		searchRequestBuilder.setQuery(boolQuery);
 
-		// 高亮（xxx=111,aaa=222）
-		if (StringUtils.isNotEmpty(highlightFields)) {
-			String[] hf = highlightFields.split(",");
+		if (null != highlightFieldList && !highlightFieldList.isEmpty()) {
 			HighlightBuilder highlightBuilder = new HighlightBuilder();
 			highlightBuilder.preTags("<span class='high-light' >");/* 设置前缀 */
 			highlightBuilder.postTags("</span>");/* 设置后缀 */
-			for (String field : hf) {
-				/* 设置高亮字段 */
+			for (String field : highlightFieldList) {
 				highlightBuilder.field(field);
 			}
 			searchRequestBuilder.highlighter(highlightBuilder);
@@ -452,41 +450,28 @@ public class ElasticsearchUtil {
 	 */
 	private static List<Map<String, Object>> setSearchResponse(SearchResponse searchResponse) {
 		List<Map<String, Object>> sourceList = new ArrayList<>();
-
-
 		for (SearchHit searchHit : searchResponse.getHits().getHits()) {
 			searchHit.getSourceAsMap().put("id", searchHit.getId());
 
-			//TODO 处理高亮文本显示
-			//System.out.println("Source:" + searchHit.getSourceAsString());/* 源码 */
-			//System.out.println("HighlightFields" + searchHit.getHighlightFields());/* 高亮 */
+			Map<String, HighlightField> highlightFieldMap = searchHit.getHighlightFields();
+			if (null != highlightFieldMap && !highlightFieldMap.isEmpty()) {
 
+				for (String highlightField : highlightFieldMap.keySet()) {
+					log.debug("遍历 高亮结果集，覆盖 正常结果集{}", searchHit.getSourceAsMap());
+					Text[] text = searchHit.getHighlightFields().get(highlightField).getFragments();
+					StringBuffer stringBuffer = new StringBuffer();
+					if (text != null) {
+						for (Text str : text) {
+							stringBuffer.append(str.string());
+						}
+						//遍历 高亮结果集，覆盖 正常结果集
+						searchHit.getSourceAsMap().put(highlightField, stringBuffer.toString());
+					}
+				}
+			}
 			sourceList.add(searchHit.getSourceAsMap());
 		}
 
-		/*
-		List<Map<String, Object>> sourceList = new ArrayList<Map<String, Object>>();
-		StringBuffer stringBuffer = new StringBuffer();
-
-		for (SearchHit searchHit : searchResponse.getHits().getHits()) {
-			searchHit.getSource().put("id", searchHit.getId());
-
-			if (StringUtils.isNotEmpty(highlightField)) {
-
-				System.out.println("遍历 高亮结果集，覆盖 正常结果集" + searchHit.getSource());
-				Text[] text = searchHit.getHighlightFields().get(highlightField).getFragments();
-
-				if (text != null) {
-					for (Text str : text) {
-						stringBuffer.append(str.string());
-					}
-					//遍历 高亮结果集，覆盖 正常结果集
-					searchHit.getSource().put(highlightField, stringBuffer.toString());
-				}
-			}
-			sourceList.add(searchHit.getSource());
-		}
-		* */
 
 		return sourceList;
 	}

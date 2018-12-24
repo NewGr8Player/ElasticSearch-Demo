@@ -3,3 +3,11 @@ spring:
     elasticsearch:
       cluster-name: elasticsearch
       cluster-nodes: 127.0.0.1:9300
+canal:
+  client:
+    instances:
+      example:
+        port: 11111
+        batchSize: 1000
+        zookeeperAddress:
+        clusterEnabled: false

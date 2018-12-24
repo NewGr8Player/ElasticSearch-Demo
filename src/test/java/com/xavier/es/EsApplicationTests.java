@@ -57,7 +57,7 @@ public class EsApplicationTests {
 
 			map.put("name", "晓晓No." + i + "");
 			map.put("age", i);
-			map.put("interests", new String[]{"阅读", "学习"});
+			map.put("interests", "阅读学习");
 			map.put("about", "世界上没有优秀的理念，只有脚踏实地的结果");
 			map.put("processTime", new Date());
 
@@ -89,13 +89,17 @@ public class EsApplicationTests {
 	public void updateDataByIdTest() {
 		Map<String, Object> map = new HashMap<>();
 
-		map.put("name", "晓晓");
-		map.put("age", 11);
-		map.put("interests", new String[]{"阅读", "学习"});
-		map.put("about", "这条数据被修改");
-		map.put("processTime", new Date());
+		for (int i = 0; i < 100; i++) {
+			map.put("name", "晓晓");
+			map.put("age", 11);
+			map.put("interests", "阅读学习");
+			map.put("about", "这条数据被修改");
+			map.put("processTime", new Date());
 
-		ElasticsearchUtil.updateDataById(JSONObject.parseObject(JSONObject.toJSONString(map)), "test_index", "about_test", "id=11");
+			ElasticsearchUtil.updateDataById(JSONObject.parseObject(JSONObject.toJSONString(map)), "test_index", "about_test", "id=" + i);
+		}
+
+
 	}
 
 	/**
@@ -138,7 +142,7 @@ public class EsApplicationTests {
 		String matchStr = "message=C000211171122024601";
 		int size = 1000;
 
-		List<Map<String, Object>> mapList = ElasticsearchUtil.searchListData(index, type, startTime, endTime, size, "", "", false, "", matchStr);
+		List<Map<String, Object>> mapList = ElasticsearchUtil.searchListData(index, type, startTime, endTime, size, "", "", false, null, matchStr);
 
 		Set<String> guidList = new HashSet<String>() {
 		};
@@ -162,7 +166,7 @@ public class EsApplicationTests {
 
 			matchStr = "message=" + guid;
 
-			List<Map<String, Object>> tmpMap2 = ElasticsearchUtil.searchListData(index, type, startTime, endTime, size, "", "", false, "", matchStr);
+			List<Map<String, Object>> tmpMap2 = ElasticsearchUtil.searchListData(index, type, startTime, endTime, size, "", "", false, null, matchStr);
 
 			for (Map<String, Object> requestId : tmpMap2) {
 
@@ -177,7 +181,7 @@ public class EsApplicationTests {
 		for (String requestId : requestIdList) {
 
 			matchStr = "requestId=" + requestId;
-			List<Map<String, Object>> tmpMap3 = ElasticsearchUtil.searchListData(index, type, startTime, endTime, size, "", "", false, "", matchStr);
+			List<Map<String, Object>> tmpMap3 = ElasticsearchUtil.searchListData(index, type, startTime, endTime, size, "", "", false, null, matchStr);
 
 			for (Map<String, Object> item : tmpMap3) {
 
@@ -222,9 +226,9 @@ public class EsApplicationTests {
 	 */
 	@Test
 	public void searchDataPage() {
-
-		EsPage esPage = ElasticsearchUtil.searchDataPage("test_index", "about_test", 10, 5, 0, 0, "", "processTime", false, "interests,name", "interests=学习,name=晓晓");
-
+		EsPage esPage = ElasticsearchUtil.searchDataPage("test_index", "about_test", 10, 5, 0, 0,
+				"", "processTime", false,
+				Arrays.asList("interests", "name"), "interests=学习,name=晓晓");
 		System.out.println(JSONObject.toJSONString(esPage.getRecordList()));
 
 	}
