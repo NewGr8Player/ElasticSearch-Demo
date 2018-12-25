@@ -1,6 +1,7 @@
 package com.xavier.es;
 
 import com.alibaba.fastjson.JSONObject;
+import com.xavier.EsApplication;
 import com.xavier.es.util.ElasticsearchUtil;
 import com.xavier.es.util.EsPage;
 import org.apache.commons.lang3.time.DateUtils;

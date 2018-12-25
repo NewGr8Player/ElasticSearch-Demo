@@ -25,6 +25,8 @@ import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
 import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -35,11 +37,13 @@ import java.util.UUID;
 
 
 /**
- * 描述: Elasticsearch 工具类
+ * Elasticsearch 工具类
+ * (此处Order注解不能删除，默认加载顺序该实例初始化晚于调用，造成空指针异常)
  *
  * @author NewGr8Player
  **/
 @Slf4j
+@Order(Ordered.HIGHEST_PRECEDENCE)
 @Component
 public class ElasticsearchUtil {
 
@@ -97,12 +101,13 @@ public class ElasticsearchUtil {
 	 */
 	public static boolean isIndexExist(String index) {
 		IndicesExistsResponse inExistsResponse = client.admin().indices().exists(new IndicesExistsRequest(index)).actionGet();
-		if (inExistsResponse.isExists()) {
+		boolean isExists = inExistsResponse.isExists();
+		if (isExists) {
 			log.info("Index [" + index + "] is exist!");
 		} else {
 			log.info("Index [" + index + "] is not exist!");
 		}
-		return inExistsResponse.isExists();
+		return isExists;
 	}
 
 	/**
@@ -471,8 +476,6 @@ public class ElasticsearchUtil {
 			}
 			sourceList.add(searchHit.getSourceAsMap());
 		}
-
-
 		return sourceList;
 	}
 

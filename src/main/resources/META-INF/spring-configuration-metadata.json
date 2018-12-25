@@ -1,0 +1,10 @@
+{
+  "properties": [
+    {
+      "sourceType": "com.xavier.config.SyncConfigBean",
+      "name": "sync.mapping",
+      "type": "java.util.Map<java.lang.String,com.xavier.config.SyncConfigBean.TableMappting>",
+      "description": "Sync field mapping."
+    }
+  ]
+}
