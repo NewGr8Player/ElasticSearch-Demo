@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.xavier.EsApplication;
 import com.xavier.es.util.ElasticsearchUtil;
 import com.xavier.es.util.EsPage;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -16,6 +17,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.text.ParseException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 
 @RunWith(SpringRunner.class)
@@ -227,11 +229,10 @@ public class EsApplicationTests {
 	 */
 	@Test
 	public void searchDataPage() {
-		EsPage esPage = ElasticsearchUtil.searchDataPage("test_index", "about_test", 10, 5, 0, 0,
-				"", "processTime", false,
-				Arrays.asList("interests", "name"), "interests=学习,name=晓晓");
+		EsPage esPage = ElasticsearchUtil.searchDataPage("jlxf", "pt_petition_person", 1, 10, 0, 0,
+				"", "", false,
+				Arrays.asList("address_label", "name"), "address_label=吉林省,name=冯泽明");
 		System.out.println(JSONObject.toJSONString(esPage.getRecordList()));
-
 	}
 
 	@Test
@@ -250,5 +251,17 @@ public class EsApplicationTests {
 		if (null != apiResponse.get("hits") && null != apiResponse.get("hits")) {
 			System.out.println(apiResponse.get("hits"));
 		}
+	}
+
+	@Test
+	public void splitToListStreamTest() {
+		String highlightFields = "a1b,v,c,df";
+		Arrays.stream(highlightFields.split(","))
+				.filter(s -> StringUtils.isNotBlank(s))
+				.map(s -> s.trim())
+				.collect(Collectors.toList())
+				.forEach(
+						System.out::println
+				);
 	}
 }

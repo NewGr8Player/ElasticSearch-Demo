@@ -25,8 +25,10 @@ public class MyCanalEventListener {
 				elasticSearchSyncService.insert(tableName,rowData);
 				break;
 			case UPDATE:
+				elasticSearchSyncService.update(tableName,rowData);
 				break;
 			case DELETE:
+				elasticSearchSyncService.delete(tableName,rowData);
 				break;
 			default:
 				log.debug("Not monitored action value:{},rowData:{}", eventType.getNumber(), rowData);
