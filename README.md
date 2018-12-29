@@ -17,7 +17,9 @@ canal:
 # 自定义配置
 sync:
   elasticsearch:
-  
+    host: 127.0.0.1
+    port: 9200
+    schema: http
   config:
     mapping: # 下面包含第一层List，是单表的配置
       - enabled: true # 是否启用 boolean
