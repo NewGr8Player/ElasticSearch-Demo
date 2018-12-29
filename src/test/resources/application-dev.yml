@@ -24,5 +24,3 @@ sync:
           - field-name: no
             mapping-name: bianhao
             show: true
-index:
-  name: "jlxf"

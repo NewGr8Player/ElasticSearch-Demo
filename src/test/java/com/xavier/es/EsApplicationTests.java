@@ -145,7 +145,7 @@ public class EsApplicationTests {
 		String matchStr = "message=C000211171122024601";
 		int size = 1000;
 
-		List<Map<String, Object>> mapList = ElasticsearchUtil.searchListData(index, type, startTime, endTime, size, "", "", false, null, matchStr);
+		List<Map<String, Object>> mapList = ElasticsearchUtil.searchListData(index, type, startTime, endTime, size, "", null, false, null, matchStr);
 
 		Set<String> guidList = new HashSet<String>() {
 		};
@@ -169,7 +169,7 @@ public class EsApplicationTests {
 
 			matchStr = "message=" + guid;
 
-			List<Map<String, Object>> tmpMap2 = ElasticsearchUtil.searchListData(index, type, startTime, endTime, size, "", "", false, null, matchStr);
+			List<Map<String, Object>> tmpMap2 = ElasticsearchUtil.searchListData(index, type, startTime, endTime, size, "", null, false, null, matchStr);
 
 			for (Map<String, Object> requestId : tmpMap2) {
 
@@ -184,7 +184,7 @@ public class EsApplicationTests {
 		for (String requestId : requestIdList) {
 
 			matchStr = "requestId=" + requestId;
-			List<Map<String, Object>> tmpMap3 = ElasticsearchUtil.searchListData(index, type, startTime, endTime, size, "", "", false, null, matchStr);
+			List<Map<String, Object>> tmpMap3 = ElasticsearchUtil.searchListData(index, type, startTime, endTime, size, "", null, false, null, matchStr);
 
 			for (Map<String, Object> item : tmpMap3) {
 
@@ -229,8 +229,8 @@ public class EsApplicationTests {
 	 */
 	@Test
 	public void searchDataPage() {
-		EsPage esPage = ElasticsearchUtil.searchDataPage("jlxf", "pt_petition_person", 1, 10, 0, 0,
-				"", "", false,
+		EsPage esPage = ElasticsearchUtil.searchDataPage("jlxf", "pt_petition_person_case", 1, 10, 0, 0,
+				"", null, false,
 				Arrays.asList("address_label", "name"), "address_label=吉林省,name=冯泽明");
 		System.out.println(JSONObject.toJSONString(esPage.getRecordList()));
 	}
@@ -263,5 +263,32 @@ public class EsApplicationTests {
 				.forEach(
 						System.out::println
 				);
+	}
+
+	@Test
+	public void splitToListMapStreamTest() {
+		String sortField = "a::asc,b::desc,c::asc";
+
+		List sortFieldList = Arrays.stream(sortField.split(","))
+				.filter(s -> StringUtils.isNotBlank(s) && s.contains("::"))
+				.map(s -> {
+					Map fildInfoMap = new HashMap<String, String>();
+					String[] fieldAndSort = s.split("::");
+					fildInfoMap.put("field", fieldAndSort[0]);
+					fildInfoMap.put("sort", fieldAndSort[1].toLowerCase());
+					return fildInfoMap;
+				})
+				.collect(Collectors.toList());
+
+		sortFieldList.forEach(System.out::println);
+	}
+
+	@Test
+	public void exceptionTest(){
+		Map map = new HashMap();
+		for(int i = 0;i< 100;i++){
+			map.put(String.format("%10s",i),String.format("%10s",100-i));
+		}
+		ElasticsearchUtil.addData(JSONObject.parseObject(JSONObject.toJSONString(map)), "jlxf", "jlxf","1008611");
 	}
 }

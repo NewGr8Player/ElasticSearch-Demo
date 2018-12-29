@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 查询
@@ -26,25 +27,17 @@ public class ElasticsearchQueryService {
 	 * @param startTime          开始时间
 	 * @param endTime            结束时间
 	 * @param fields             需要显示的字段，逗号分隔（缺省为全部字段）
-	 * @param sortField          排序字段
+	 * @param sortFieldList      排序字段
 	 * @param matchPhrase        true 使用，短语精准匹配
 	 * @param highlightFieldList 高亮字段
 	 * @param matchStr           过滤条件（xxx=111,aaa=222）
 	 * @return
 	 */
-	public EsPage basicQuery(String index, String type, int currentPage, int pageSize, long startTime, long endTime,
-	                         String fields, String sortField, boolean matchPhrase, List<String> highlightFieldList,
+	public EsPage pageQuery(String index, String type, int currentPage, int pageSize, long startTime, long endTime,
+	                         String fields, List<Map<String, String>> sortFieldList, boolean matchPhrase, List<String> highlightFieldList,
 	                         String matchStr) {
 		return ElasticsearchUtil.searchDataPage(index, type, currentPage, pageSize, startTime, endTime,
-				fields, sortField, matchPhrase, highlightFieldList
+				fields, sortFieldList, matchPhrase, highlightFieldList
 				, matchStr);
 	}
-
-	/**
-	 * 分页查询（高亮）
-	 */
-	public void pageQuery() {
-
-	}
-
 }

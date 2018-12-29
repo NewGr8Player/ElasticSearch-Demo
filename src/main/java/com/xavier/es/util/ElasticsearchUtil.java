@@ -121,6 +121,7 @@ public class ElasticsearchUtil {
 	 */
 	public static String addData(JSONObject jsonObject, String index, String type, String id) {
 
+
 		IndexResponse response = client.prepareIndex(index, type, id).setSource(jsonObject).get();
 
 		log.info("addData response status:{},id:{}", response.status().getStatus(), response.getId());
@@ -227,17 +228,17 @@ public class ElasticsearchUtil {
 	/**
 	 * 使用分词查询
 	 *
-	 * @param index       索引名称
-	 * @param type        类型名称,可传入多个type逗号分隔
-	 * @param size        文档大小限制
-	 * @param fields      需要显示的字段，逗号分隔（缺省为全部字段）
-	 * @param sortField   排序字段
-	 * @param matchPhrase true 使用，短语精准匹配
-	 * @param matchStr    过滤条件（xxx=111,aaa=222）
+	 * @param index         索引名称
+	 * @param type          类型名称,可传入多个type逗号分隔
+	 * @param size          文档大小限制
+	 * @param fields        需要显示的字段，逗号分隔（缺省为全部字段）
+	 * @param sortFieldList 排序字段
+	 * @param matchPhrase   true 使用，短语精准匹配
+	 * @param matchStr      过滤条件（xxx=111,aaa=222）
 	 * @return
 	 */
-	public static List<Map<String, Object>> searchListData(String index, String type, Integer size, String fields, String sortField, boolean matchPhrase, String matchStr) {
-		return searchListData(index, type, 0, 0, size, fields, sortField, matchPhrase, null, matchStr);
+	public static List<Map<String, Object>> searchListData(String index, String type, Integer size, String fields, List<Map<String, String>> sortFieldList, boolean matchPhrase, String matchStr) {
+		return searchListData(index, type, 0, 0, size, fields, sortFieldList, matchPhrase, null, matchStr);
 	}
 
 
@@ -248,14 +249,14 @@ public class ElasticsearchUtil {
 	 * @param type               类型名称,可传入多个type逗号分隔
 	 * @param size               文档大小限制
 	 * @param fields             需要显示的字段，逗号分隔（缺省为全部字段）
-	 * @param sortField          排序字段
+	 * @param sortFieldList      排序字段
 	 * @param matchPhrase        true 使用，短语精准匹配
 	 * @param highlightFieldList 高亮字段
 	 * @param matchStr           过滤条件（xxx=111,aaa=222）
 	 * @return
 	 */
-	public static List<Map<String, Object>> searchListData(String index, String type, Integer size, String fields, String sortField, boolean matchPhrase, List<String> highlightFieldList, String matchStr) {
-		return searchListData(index, type, 0, 0, size, fields, sortField, matchPhrase, highlightFieldList, matchStr);
+	public static List<Map<String, Object>> searchListData(String index, String type, Integer size, String fields, List<Map<String, String>> sortFieldList, boolean matchPhrase, List<String> highlightFieldList, String matchStr) {
+		return searchListData(index, type, 0, 0, size, fields, sortFieldList, matchPhrase, highlightFieldList, matchStr);
 	}
 
 
@@ -268,13 +269,13 @@ public class ElasticsearchUtil {
 	 * @param endTime            结束时间
 	 * @param size               文档大小限制
 	 * @param fields             需要显示的字段，逗号分隔（缺省为全部字段）
-	 * @param sortField          排序字段
+	 * @param sortFieldList      排序字段
 	 * @param matchPhrase        true 使用，短语精准匹配
 	 * @param highlightFieldList 高亮字段
 	 * @param matchStr           过滤条件（xxx=111,aaa=222）
 	 * @return
 	 */
-	public static List<Map<String, Object>> searchListData(String index, String type, long startTime, long endTime, Integer size, String fields, String sortField, boolean matchPhrase, List<String> highlightFieldList, String matchStr) {
+	public static List<Map<String, Object>> searchListData(String index, String type, long startTime, long endTime, Integer size, String fields, List<Map<String, String>> sortFieldList, boolean matchPhrase, List<String> highlightFieldList, String matchStr) {
 
 		SearchRequestBuilder searchRequestBuilder = client.prepareSearch(index);
 		if (StringUtils.isNotEmpty(type)) {
@@ -325,8 +326,13 @@ public class ElasticsearchUtil {
 		}
 		searchRequestBuilder.setFetchSource(true);
 
-		if (StringUtils.isNotEmpty(sortField)) {
-			searchRequestBuilder.addSort(sortField, SortOrder.DESC);
+		//排序字段
+		if (null != sortFieldList && sortFieldList.size() > 0) {
+			for (Map<String, String> fieldInfo : sortFieldList) {
+				searchRequestBuilder.addSort(
+						fieldInfo.get("field")
+						, "asc".equals(fieldInfo.get("sort")) ? SortOrder.ASC : SortOrder.DESC);
+			}
 		}
 
 		if (size != null && size > 0) {
@@ -362,13 +368,13 @@ public class ElasticsearchUtil {
 	 * @param startTime          开始时间
 	 * @param endTime            结束时间
 	 * @param fields             需要显示的字段，逗号分隔（缺省为全部字段）
-	 * @param sortField          排序字段
+	 * @param sortFieldList      排序字段
 	 * @param matchPhrase        true 使用，短语精准匹配
 	 * @param highlightFieldList 高亮字段
 	 * @param matchStr           过滤条件（xxx=111,aaa=222）
 	 * @return
 	 */
-	public static EsPage searchDataPage(String index, String type, int currentPage, int pageSize, long startTime, long endTime, String fields, String sortField, boolean matchPhrase, List<String> highlightFieldList, String matchStr) {
+	public static EsPage searchDataPage(String index, String type, int currentPage, int pageSize, long startTime, long endTime, String fields, List<Map<String, String>> sortFieldList, boolean matchPhrase, List<String> highlightFieldList, String matchStr) {
 		SearchRequestBuilder searchRequestBuilder = client.prepareSearch(index);
 		if (StringUtils.isNotEmpty(type)) {
 			searchRequestBuilder.setTypes(type.split(","));
@@ -381,8 +387,12 @@ public class ElasticsearchUtil {
 		}
 
 		//排序字段
-		if (StringUtils.isNotEmpty(sortField)) {
-			searchRequestBuilder.addSort(sortField, SortOrder.DESC);
+		if (null != sortFieldList && sortFieldList.size() > 0) {
+			for (Map<String, String> fieldInfo : sortFieldList) {
+				searchRequestBuilder.addSort(
+						fieldInfo.get("field")
+						, "asc".equals(fieldInfo.get("sort")) ? SortOrder.ASC : SortOrder.DESC);
+			}
 		}
 
 		BoolQueryBuilder boolQuery = QueryBuilders.boolQuery();

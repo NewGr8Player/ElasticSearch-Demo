@@ -5,7 +5,6 @@ import com.alibaba.fastjson.JSONObject;
 import com.alibaba.otter.canal.protocol.CanalEntry;
 import com.xavier.es.util.ElasticsearchUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -20,9 +19,6 @@ import java.util.Map;
 @Service
 public class ElasticSearchSyncService {
 
-	@Value("${index.name}")
-	private String indexName;
-
 	/**
 	 * 插入操作
 	 *
@@ -31,9 +27,9 @@ public class ElasticSearchSyncService {
 	 */
 	public void insert(String tableName, CanalEntry.RowData rowData) {
 		/* 索引是否存在 */
-		if (!ElasticsearchUtil.isIndexExist(indexName)) {
-			ElasticsearchUtil.createIndex(indexName);
-			log.info("创建索引:{}-{}", indexName, "ElasticSearchSyncService#insert");
+		if (!ElasticsearchUtil.isIndexExist(tableName)) {
+			ElasticsearchUtil.createIndex(tableName);
+			log.info("创建索引:{}-{}", tableName, "ElasticSearchSyncService#insert");
 		}
 		Map<String, Object> dataMap = new HashMap<>();
 		rowData.getAfterColumnsList().forEach(
@@ -41,7 +37,7 @@ public class ElasticSearchSyncService {
 					dataMap.put(column.getName(), column.getValue());//TODO 字段映射
 				}
 		);
-		ElasticsearchUtil.addData(JSONObject.parseObject(JSON.toJSONString(dataMap)), indexName, tableName, String.valueOf(dataMap.get("id")));
+		ElasticsearchUtil.addData(JSONObject.parseObject(JSON.toJSONString(dataMap)), tableName, tableName, (String) dataMap.get("id"));
 	}
 
 	/**
@@ -52,9 +48,9 @@ public class ElasticSearchSyncService {
 	 */
 	public void update(String tableName, CanalEntry.RowData rowData) {
 		/* 索引是否存在 */
-		if (!ElasticsearchUtil.isIndexExist(indexName)) {
-			ElasticsearchUtil.createIndex(indexName);
-			log.info("创建索引:{}-{}", indexName, "ElasticSearchSyncService#update");
+		if (!ElasticsearchUtil.isIndexExist(tableName)) {
+			ElasticsearchUtil.createIndex(tableName);
+			log.info("创建索引:{}-{}", tableName, "ElasticSearchSyncService#update");
 		}
 		Map<String, Object> dataMap = new HashMap<>();
 		rowData.getAfterColumnsList().forEach(
@@ -62,7 +58,7 @@ public class ElasticSearchSyncService {
 					dataMap.put(column.getName(), column.getValue());//TODO 字段映射
 				}
 		);
-		ElasticsearchUtil.updateDataById(JSONObject.parseObject(JSON.toJSONString(dataMap)), indexName, tableName, String.valueOf(dataMap.get("id")));
+		ElasticsearchUtil.updateDataById(JSONObject.parseObject(JSON.toJSONString(dataMap)), tableName, tableName, (String) dataMap.get("id"));
 	}
 
 	/**
@@ -76,8 +72,8 @@ public class ElasticSearchSyncService {
 	@Deprecated
 	public void delete(String tableName, CanalEntry.RowData rowData) {
 		/* 索引是否存在 */
-		if (!ElasticsearchUtil.isIndexExist(indexName)) {
-			log.info("索引不存在:{}-{}", indexName, "ElasticSearchSyncService#delete");
+		if (!ElasticsearchUtil.isIndexExist(tableName)) {
+			log.info("索引不存在:{}-{}", tableName, "ElasticSearchSyncService#delete");
 		} else {
 			String id = "";
 			for (CanalEntry.Column column : rowData.getBeforeColumnsList()) {
@@ -86,7 +82,7 @@ public class ElasticSearchSyncService {
 					break;
 				}
 			}
-			ElasticsearchUtil.deleteDataById(indexName, tableName, id);
+			ElasticsearchUtil.deleteDataById(tableName, tableName, id);
 		}
 	}
 }
