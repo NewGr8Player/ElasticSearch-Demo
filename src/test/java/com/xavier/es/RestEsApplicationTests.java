@@ -15,20 +15,20 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
-import java.text.ParseException;
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = EsApplication.class)
-public class EsApplicationTests {
+public class RestEsApplicationTests {
 
 	/**
 	 * 创建索引
 	 */
 	@Test
-	public void createIndexTest() {
+	public void createIndexTest() throws IOException {
 		ElasticsearchUtil.createIndex("test_index");
 		ElasticsearchUtil.createIndex("test_indexsssss");
 	}
@@ -37,7 +37,7 @@ public class EsApplicationTests {
 	 * 删除索引
 	 */
 	@Test
-	public void deleteIndexTest() {
+	public void deleteIndexTest() throws IOException {
 		ElasticsearchUtil.deleteIndex("test_indexsssss");
 	}
 
@@ -45,7 +45,7 @@ public class EsApplicationTests {
 	 * 判断索引是否存在
 	 */
 	@Test
-	public void isIndexExistTest() {
+	public void isIndexExistTest() throws IOException {
 		ElasticsearchUtil.isIndexExist("test_index");
 	}
 
@@ -53,7 +53,7 @@ public class EsApplicationTests {
 	 * 数据添加
 	 */
 	@Test
-	public void addDataTest() {
+	public void addDataTest() throws Exception {
 
 		for (long i = 0; i < 100; i++) {
 			Map<String, Object> map = new HashMap<>();
@@ -72,7 +72,7 @@ public class EsApplicationTests {
 	 * 通过ID删除数据
 	 */
 	@Test
-	public void deleteDataByIdTest() {
+	public void deleteDataByIdTest() throws IOException {
 
 		for (int i = 0; i < 100; i++) {
 			ElasticsearchUtil.deleteDataById("test_index", "about_test", "id=" + i);
@@ -89,7 +89,7 @@ public class EsApplicationTests {
 	 * id         数据ID
 	 */
 	@Test
-	public void updateDataByIdTest() {
+	public void updateDataByIdTest() throws IOException {
 		Map<String, Object> map = new HashMap<>();
 
 		for (int i = 0; i < 100; i++) {
@@ -114,7 +114,7 @@ public class EsApplicationTests {
 	 * fields 需要显示的字段，逗号分隔（缺省为全部字段）
 	 */
 	@Test
-	public void searchDataByIdTest() {
+	public void searchDataByIdTest() throws IOException {
 		Map<String, Object> map = ElasticsearchUtil.searchDataById("test_index", "about_test", "id=11", null);
 		System.out.println(JSONObject.toJSONString(map));
 	}
@@ -135,7 +135,7 @@ public class EsApplicationTests {
 	 * matchStr       过滤条件（xxx=111,aaa=222）
 	 */
 	@Test
-	public void searchListData() throws ParseException {
+	public void searchListData() throws Exception {
 
 		long startTime = DateUtils.parseDate("2017-11-22 00:00:00", "yyyy-MM-dd HH:mm:ss").getTime();
 		long endTime = DateUtils.parseDate("2017-11-23 00:00:00", "yyyy-MM-dd HH:mm:ss").getTime();
@@ -228,8 +228,8 @@ public class EsApplicationTests {
 	 * matchStr       过滤条件（xxx=111,aaa=222）
 	 */
 	@Test
-	public void searchDataPage() {
-		EsPage esPage = ElasticsearchUtil.searchDataPage("jlxf", "pt_petition_person_case", 1, 10, 0, 0,
+	public void searchDataPage() throws Exception {
+		EsPage esPage = ElasticsearchUtil.searchDataPage("pt_petition_person", "pt_petition_person", 1, 10, 0, 0,
 				"", null, false,
 				Arrays.asList("address_label", "name"), "address_label=吉林省,name=冯泽明");
 		System.out.println(JSONObject.toJSONString(esPage.getRecordList()));
@@ -254,7 +254,7 @@ public class EsApplicationTests {
 	}
 
 	@Test
-	public void splitToListStreamTest() {
+	public void splitToListStreamTest() throws IOException {
 		String highlightFields = "a1b,v,c,df";
 		Arrays.stream(highlightFields.split(","))
 				.filter(s -> StringUtils.isNotBlank(s))
@@ -266,7 +266,7 @@ public class EsApplicationTests {
 	}
 
 	@Test
-	public void splitToListMapStreamTest() {
+	public void splitToListMapStreamTest() throws IOException {
 		String sortField = "a::asc,b::desc,c::asc";
 
 		List sortFieldList = Arrays.stream(sortField.split(","))
@@ -284,11 +284,11 @@ public class EsApplicationTests {
 	}
 
 	@Test
-	public void exceptionTest(){
+	public void exceptionTest() throws Exception {
 		Map map = new HashMap();
-		for(int i = 0;i< 100;i++){
-			map.put(String.format("%10s",i),String.format("%10s",100-i));
+		for (int i = 0; i < 100; i++) {
+			map.put(String.format("%10s", i), String.format("%10s", 100 - i));
 		}
-		ElasticsearchUtil.addData(JSONObject.parseObject(JSONObject.toJSONString(map)), "jlxf", "jlxf","1008611");
+		ElasticsearchUtil.addData(JSONObject.parseObject(JSONObject.toJSONString(map)), "jlxf", "jlxf", "1008611");
 	}
 }

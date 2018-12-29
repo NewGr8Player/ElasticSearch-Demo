@@ -65,10 +65,15 @@ public class ElasticsearchQueryApi {
 					return fildInfoMap;
 				})
 				.collect(Collectors.toList());
-		return ElasticsearchUtil.searchDataPage(index, type,
-				currentPageNum, pageSizeNum, 0, 0,
-				fields, sortFieldList, matchPhraseBoolean, highlightFieldList
-				, matchStr);
+		try {
+			return ElasticsearchUtil.searchDataPage(index, type,
+					currentPageNum, pageSizeNum, 0, 0,
+					fields, sortFieldList, matchPhraseBoolean, highlightFieldList
+					, matchStr);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return new EsPage();
+		}
 	}
 
 }

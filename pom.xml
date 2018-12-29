@@ -24,6 +24,7 @@
         <springfox.verison>2.9.2</springfox.verison>
         <swagger-bootstrap-ui.version>1.8.7</swagger-bootstrap-ui.version>
         <canal-starter.version>0.0.2-REALEASE</canal-starter.version>
+        <elasticsearch.version>6.4.2</elasticsearch.version>
     </properties>
 
     <repositories>
@@ -58,8 +59,15 @@
         </dependency>
         <!-- Elasticsearch -->
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-elasticsearch</artifactId>
+            <groupId>org.elasticsearch</groupId>
+            <artifactId>elasticsearch</artifactId>
+            <version>${elasticsearch.version}</version>
+        </dependency>
+        <!-- Elasticsearch HighLevelClient-->
+        <dependency>
+            <groupId>org.elasticsearch.client</groupId>
+            <artifactId>elasticsearch-rest-high-level-client</artifactId>
+            <version>${elasticsearch.version}</version>
         </dependency>
         <!-- Guava -->
         <dependency>

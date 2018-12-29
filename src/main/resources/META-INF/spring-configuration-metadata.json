@@ -5,6 +5,12 @@
       "name": "sync.mapping",
       "type": "java.util.Map<java.lang.String,com.xavier.config.SyncConfigBean.TableMappting>",
       "description": "Sync field mapping."
+    },
+    {
+      "sourceType": "com.xavier.es.config.ESConfig",
+      "name": "sync.elasticsearch",
+      "type": "java.util.Map<java.lang.String,java.lang.Object>",
+      "description": "Sync elasticsearch config."
     }
   ]
 }

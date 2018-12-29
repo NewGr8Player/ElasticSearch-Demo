@@ -4,10 +4,6 @@ spring:
   groovy:
     template:
       check-template-location: false
-  data:
-    elasticsearch:
-      cluster-name: elasticsearch
-      cluster-nodes: 127.0.0.1:9300
 springfox:
   documentation:
     swagger:
@@ -25,6 +21,10 @@ canal:
         cluster-enabled: false
         zookeeper-address:
 sync:
+  elasticsearch:
+    host: 127.0.0.1
+    port: 9200
+    schema: http
   config:
     mapping:
       - enabled: true

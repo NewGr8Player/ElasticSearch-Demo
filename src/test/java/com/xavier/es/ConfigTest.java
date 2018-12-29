@@ -5,7 +5,7 @@ import com.xavier.config.SyncConfigBean;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-public class ConfigTest extends EsApplicationTests {
+public class ConfigTest extends RestEsApplicationTests {
 
 	@Autowired
 	private SyncConfigBean syncConfigBean;

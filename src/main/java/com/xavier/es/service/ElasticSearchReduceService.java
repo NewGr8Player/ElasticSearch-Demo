@@ -5,7 +5,6 @@ import com.alibaba.fastjson.JSONObject;
 import com.alibaba.otter.canal.protocol.CanalEntry;
 import com.xavier.es.util.ElasticsearchUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -20,7 +19,7 @@ public class ElasticSearchReduceService {
 	 */
 	public static final String PT_PETITION_PERSON_CASE = "pt_petition_person_case";
 
-	public void reduce(String tableName, CanalEntry.RowData rowData, CanalEntry.EventType eventType) {
+	public void reduce(String tableName, CanalEntry.RowData rowData, CanalEntry.EventType eventType) throws Exception {
 		switch (tableName) {
 			case "pt_petition_person":
 				petitionPersonWithCase(rowData, eventType);
@@ -33,7 +32,7 @@ public class ElasticSearchReduceService {
 	 *
 	 * @param rowData
 	 */
-	private void petitionPersonWithCase(CanalEntry.RowData rowData, CanalEntry.EventType eventType) {
+	private void petitionPersonWithCase(CanalEntry.RowData rowData, CanalEntry.EventType eventType) throws Exception {
 
 		Map<String, Object> dataMap = new HashMap<>();
 		rowData.getAfterColumnsList().forEach(

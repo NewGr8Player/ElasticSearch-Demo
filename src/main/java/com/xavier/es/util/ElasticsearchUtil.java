@@ -4,23 +4,29 @@ package com.xavier.es.util;
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
-import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
-import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequest;
-import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsResponse;
+import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
+import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
+import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.delete.DeleteResponse;
-import org.elasticsearch.action.get.GetRequestBuilder;
+import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
-import org.elasticsearch.action.search.SearchRequestBuilder;
+import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.action.update.UpdateRequest;
-import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.action.update.UpdateResponse;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.text.Text;
+import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
 import org.elasticsearch.search.sort.SortOrder;
@@ -30,6 +36,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -49,65 +56,65 @@ public class ElasticsearchUtil {
 
 
 	@Autowired
-	private TransportClient transportClient;
+	private RestHighLevelClient restHighLevelClient;
 
-	private static TransportClient client;
+	private static RestHighLevelClient client;
 
 	@PostConstruct
 	public void init() {
-		client = this.transportClient;
-	}
-
-	/**
-	 * 创建索引
-	 *
-	 * @param index
-	 * @return
-	 */
-	public static boolean createIndex(String index) {
-		if (!isIndexExist(index)) {
-			log.info("Index is not exits!");
-		}
-		CreateIndexResponse indexresponse = client.admin().indices().prepareCreate(index).execute().actionGet();
-		log.info("执行建立成功？" + indexresponse.isAcknowledged());
-
-		return indexresponse.isAcknowledged();
-	}
-
-	/**
-	 * 删除索引
-	 *
-	 * @param index
-	 * @return
-	 */
-	public static boolean deleteIndex(String index) {
-		if (!isIndexExist(index)) {
-			log.info("Index is not exits!");
-		}
-		DeleteIndexResponse dResponse = client.admin().indices().prepareDelete(index).execute().actionGet();
-		if (dResponse.isAcknowledged()) {
-			log.info("delete index " + index + "  successfully!");
-		} else {
-			log.info("Fail to delete index " + index);
-		}
-		return dResponse.isAcknowledged();
+		client = this.restHighLevelClient;
 	}
 
 	/**
 	 * 判断索引是否存在
 	 *
-	 * @param index
+	 * @param indexName
 	 * @return
 	 */
-	public static boolean isIndexExist(String index) {
-		IndicesExistsResponse inExistsResponse = client.admin().indices().exists(new IndicesExistsRequest(index)).actionGet();
-		boolean isExists = inExistsResponse.isExists();
-		if (isExists) {
-			log.info("Index [" + index + "] is exist!");
+	public static boolean isIndexExist(String indexName) throws IOException {
+		GetIndexRequest request = new GetIndexRequest();
+		request.indices(indexName);
+		boolean exists = client.indices().exists(request, RequestOptions.DEFAULT);
+		log.debug("Index {} exist: {}", indexName, exists);
+		return exists;
+	}
+
+	/**
+	 * 创建索引
+	 *
+	 * @param indexName
+	 * @return
+	 */
+	public static boolean createIndex(String indexName) throws IOException {
+		if (isIndexExist(indexName)) {
+			log.debug("Index is already exits!");
+			return true;
 		} else {
-			log.info("Index [" + index + "] is not exist!");
+			CreateIndexRequest request = new CreateIndexRequest(indexName);
+			CreateIndexResponse createIndexResponse = client.indices().create(request, RequestOptions.DEFAULT);
+			return createIndexResponse.isAcknowledged();
 		}
-		return isExists;
+	}
+
+	/**
+	 * 删除索引
+	 *
+	 * @param indexName
+	 * @return
+	 */
+	public static boolean deleteIndex(String indexName) throws IOException {
+		if (!isIndexExist(indexName)) {
+			log.debug("Index is not exits!");
+			return true;
+		} else {
+			try {
+				client.indices().delete(new DeleteIndexRequest(indexName), RequestOptions.DEFAULT);
+				return true;
+			} catch (IOException e) {
+				e.printStackTrace();
+				return false;
+			}
+		}
 	}
 
 	/**
@@ -119,14 +126,13 @@ public class ElasticsearchUtil {
 	 * @param id         数据ID
 	 * @return
 	 */
-	public static String addData(JSONObject jsonObject, String index, String type, String id) {
-
-
-		IndexResponse response = client.prepareIndex(index, type, id).setSource(jsonObject).get();
-
-		log.info("addData response status:{},id:{}", response.status().getStatus(), response.getId());
-
-		return response.getId();
+	public static String addData(JSONObject jsonObject, String index, String type, String id) throws Exception {
+		index = index.toLowerCase();
+		type = type.toLowerCase();
+		IndexRequest indexRequest = new IndexRequest(index, type, id).source(jsonObject, XContentType.JSON);
+		IndexResponse ret = client.index(indexRequest, RequestOptions.DEFAULT);
+		log.debug("Insert index:{},type:{},id={},result:{}", index, type, ret.getId(), ret.getResult());
+		return ret.getId();
 	}
 
 	/**
@@ -137,7 +143,7 @@ public class ElasticsearchUtil {
 	 * @param type       类型，类似表
 	 * @return
 	 */
-	public static String addData(JSONObject jsonObject, String index, String type) {
+	public static String addData(JSONObject jsonObject, String index, String type) throws Exception {
 		return addData(jsonObject, index, type, UUID.randomUUID().toString().replaceAll("-", "").toUpperCase());
 	}
 
@@ -148,11 +154,10 @@ public class ElasticsearchUtil {
 	 * @param type  类型，类似表
 	 * @param id    数据ID
 	 */
-	public static void deleteDataById(String index, String type, String id) {
-
-		DeleteResponse response = client.prepareDelete(index, type, id).execute().actionGet();
-
-		log.info("deleteDataById response status:{},id:{}", response.status().getStatus(), response.getId());
+	public static void deleteDataById(String index, String type, String id) throws IOException {
+		DeleteRequest deleteRequest = new DeleteRequest(index, type, id);
+		DeleteResponse ret = client.delete(deleteRequest, RequestOptions.DEFAULT);
+		log.debug("Delete index:{},type:{},id={},result:{}", index, type, id, ret.getResult());
 	}
 
 	/**
@@ -164,14 +169,11 @@ public class ElasticsearchUtil {
 	 * @param id         数据ID
 	 * @return
 	 */
-	public static void updateDataById(JSONObject jsonObject, String index, String type, String id) {
-
-		UpdateRequest updateRequest = new UpdateRequest();
-
-		updateRequest.index(index).type(type).id(id).doc(jsonObject);
-
-		client.update(updateRequest);
-
+	public static void updateDataById(JSONObject jsonObject, String index, String type, String id) throws IOException {
+		UpdateRequest updateRequest = new UpdateRequest(index, type, id)
+				.doc(jsonObject);
+		UpdateResponse ret = client.update(updateRequest, RequestOptions.DEFAULT);
+		log.debug("Update index:{},type:{},id={},result:{}", index, type, id, ret.getResult());
 	}
 
 	/**
@@ -183,82 +185,12 @@ public class ElasticsearchUtil {
 	 * @param fields 需要显示的字段，逗号分隔（缺省为全部字段）
 	 * @return
 	 */
-	public static Map<String, Object> searchDataById(String index, String type, String id, String fields) {
-
-		GetRequestBuilder getRequestBuilder = client.prepareGet(index, type, id);
-
-		if (StringUtils.isNotEmpty(fields)) {
-			getRequestBuilder.setFetchSource(fields.split(","), null);
-		}
-
-		GetResponse getResponse = getRequestBuilder.execute().actionGet();
-
-		return getResponse.getSource();
+	public static Map<String, Object> searchDataById(String index, String type, String id, String fields) throws IOException {
+		GetRequest getRequest = new GetRequest(index, type, id)
+				.fetchSourceContext(new FetchSourceContext(true, fields.split(","), null));
+		GetResponse ret = client.get(getRequest, RequestOptions.DEFAULT);
+		return ret.getSourceAsMap();
 	}
-
-	/**
-	 * 使用分词查询
-	 *
-	 * @param index     索引名称
-	 * @param type      类型名称,可传入多个type逗号分隔
-	 * @param startTime 开始时间
-	 * @param endTime   结束时间
-	 * @param size      文档大小限制
-	 * @param matchStr  过滤条件（xxx=111,aaa=222）
-	 * @return
-	 */
-	public static List<Map<String, Object>> searchListData(String index, String type, long startTime, long endTime, Integer size, String matchStr) {
-		return searchListData(index, type, startTime, endTime, size, null, null, false, null, matchStr);
-	}
-
-	/**
-	 * 使用分词查询
-	 *
-	 * @param index    索引名称
-	 * @param type     类型名称,可传入多个type逗号分隔
-	 * @param size     文档大小限制
-	 * @param fields   需要显示的字段，逗号分隔（缺省为全部字段）
-	 * @param matchStr 过滤条件（xxx=111,aaa=222）
-	 * @return
-	 */
-	public static List<Map<String, Object>> searchListData(String index, String type, Integer size, String fields, String matchStr) {
-		return searchListData(index, type, 0, 0, size, fields, null, false, null, matchStr);
-	}
-
-	/**
-	 * 使用分词查询
-	 *
-	 * @param index         索引名称
-	 * @param type          类型名称,可传入多个type逗号分隔
-	 * @param size          文档大小限制
-	 * @param fields        需要显示的字段，逗号分隔（缺省为全部字段）
-	 * @param sortFieldList 排序字段
-	 * @param matchPhrase   true 使用，短语精准匹配
-	 * @param matchStr      过滤条件（xxx=111,aaa=222）
-	 * @return
-	 */
-	public static List<Map<String, Object>> searchListData(String index, String type, Integer size, String fields, List<Map<String, String>> sortFieldList, boolean matchPhrase, String matchStr) {
-		return searchListData(index, type, 0, 0, size, fields, sortFieldList, matchPhrase, null, matchStr);
-	}
-
-
-	/**
-	 * 使用分词查询
-	 *
-	 * @param index              索引名称
-	 * @param type               类型名称,可传入多个type逗号分隔
-	 * @param size               文档大小限制
-	 * @param fields             需要显示的字段，逗号分隔（缺省为全部字段）
-	 * @param sortFieldList      排序字段
-	 * @param matchPhrase        true 使用，短语精准匹配
-	 * @param highlightFieldList 高亮字段
-	 * @param matchStr           过滤条件（xxx=111,aaa=222）
-	 * @return
-	 */
-	public static List<Map<String, Object>> searchListData(String index, String type, Integer size, String fields, List<Map<String, String>> sortFieldList, boolean matchPhrase, List<String> highlightFieldList, String matchStr) {
-		return searchListData(index, type, 0, 0, size, fields, sortFieldList, matchPhrase, highlightFieldList, matchStr);
-	}
-
 
 	/**
 	 * 使用分词查询
@@ -275,87 +207,19 @@ public class ElasticsearchUtil {
 	 * @param matchStr           过滤条件（xxx=111,aaa=222）
 	 * @return
 	 */
-	public static List<Map<String, Object>> searchListData(String index, String type, long startTime, long endTime, Integer size, String fields, List<Map<String, String>> sortFieldList, boolean matchPhrase, List<String> highlightFieldList, String matchStr) {
+	public static List<Map<String, Object>> searchListData(String index, String type, long startTime, long endTime, Integer size, String fields, List<Map<String, String>> sortFieldList, boolean matchPhrase, List<String> highlightFieldList, String matchStr) throws Exception {
 
-		SearchRequestBuilder searchRequestBuilder = client.prepareSearch(index);
+		SearchRequest searchRequest = new SearchRequest(index);
 		if (StringUtils.isNotEmpty(type)) {
-			searchRequestBuilder.setTypes(type.split(","));
-		}
-		BoolQueryBuilder boolQuery = QueryBuilders.boolQuery();
-
-		if (startTime > 0 && endTime > 0) {
-			boolQuery.must(QueryBuilders.rangeQuery("timestamp")
-					.format("epoch_millis")
-					.from(startTime)
-					.to(endTime)
-					.includeLower(true)
-					.includeUpper(true));
+			searchRequest.types(type.split(","));
 		}
 
-		//搜索的的字段
-		if (StringUtils.isNotEmpty(matchStr)) {
-			for (String s : matchStr.split(",")) {
-				String[] ss = s.split("=");
-				if (ss.length > 1) {
-					if (matchPhrase == Boolean.TRUE) {
-						boolQuery.must(QueryBuilders.matchPhraseQuery(s.split("=")[0], s.split("=")[1]));
-					} else {
-						boolQuery.must(QueryBuilders.matchQuery(s.split("=")[0], s.split("=")[1]));
-					}
-				}
+		searchRequest.source(commonSearchSourceBuilderWithRetSizeLimit(startTime, endTime, size, fields, sortFieldList, matchPhrase, highlightFieldList, matchStr));
 
-			}
-		}
+		SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
+		log.debug("共查询到[{}]条数据,处理数据条数[{}]", searchResponse.getHits().totalHits, searchResponse.getHits().getHits().length);
 
-
-		if (null != highlightFieldList && !highlightFieldList.isEmpty()) {
-			HighlightBuilder highlightBuilder = new HighlightBuilder();
-			highlightBuilder.preTags("<span style='color:red' >");//设置前缀
-			highlightBuilder.postTags("</span>");//设置后缀
-			for (String field : highlightFieldList) {
-				highlightBuilder.field(field);
-			}
-			searchRequestBuilder.highlighter(highlightBuilder);
-		}
-
-
-		searchRequestBuilder.setQuery(boolQuery);
-
-		if (StringUtils.isNotEmpty(fields)) {
-			searchRequestBuilder.setFetchSource(fields.split(","), null);
-		}
-		searchRequestBuilder.setFetchSource(true);
-
-		//排序字段
-		if (null != sortFieldList && sortFieldList.size() > 0) {
-			for (Map<String, String> fieldInfo : sortFieldList) {
-				searchRequestBuilder.addSort(
-						fieldInfo.get("field")
-						, "asc".equals(fieldInfo.get("sort")) ? SortOrder.ASC : SortOrder.DESC);
-			}
-		}
-
-		if (size != null && size > 0) {
-			searchRequestBuilder.setSize(size);
-		}
-
-		//打印的内容 可以在 Elasticsearch head 和 Kibana  上执行查询
-		log.info("\n{}", searchRequestBuilder);
-
-		SearchResponse searchResponse = searchRequestBuilder.execute().actionGet();
-
-		long totalHits = searchResponse.getHits().totalHits;
-		long length = searchResponse.getHits().getHits().length;
-
-		log.info("共查询到[{}]条数据,处理数据条数[{}]", totalHits, length);
-
-		if (searchResponse.status().getStatus() == 200) {
-			// 解析对象
-			return setSearchResponse(searchResponse);
-		}
-
-		return null;
-
+		return highLightHandler(searchResponse);
 	}
 
 	/**
@@ -374,88 +238,106 @@ public class ElasticsearchUtil {
 	 * @param matchStr           过滤条件（xxx=111,aaa=222）
 	 * @return
 	 */
-	public static EsPage searchDataPage(String index, String type, int currentPage, int pageSize, long startTime, long endTime, String fields, List<Map<String, String>> sortFieldList, boolean matchPhrase, List<String> highlightFieldList, String matchStr) {
-		SearchRequestBuilder searchRequestBuilder = client.prepareSearch(index);
+	public static EsPage searchDataPage(String index, String type, int currentPage, int pageSize, long startTime, long endTime, String fields, List<Map<String, String>> sortFieldList, boolean matchPhrase, List<String> highlightFieldList, String matchStr) throws Exception {
+		SearchRequest searchRequest = new SearchRequest(index);
 		if (StringUtils.isNotEmpty(type)) {
-			searchRequestBuilder.setTypes(type.split(","));
-		}
-		searchRequestBuilder.setSearchType(SearchType.QUERY_THEN_FETCH);
-
-		// 需要显示的字段，逗号分隔（缺省为全部字段）
-		if (StringUtils.isNotEmpty(fields)) {
-			searchRequestBuilder.setFetchSource(fields.split(","), null);
+			searchRequest.types(type.split(","));
 		}
 
-		//排序字段
-		if (null != sortFieldList && sortFieldList.size() > 0) {
-			for (Map<String, String> fieldInfo : sortFieldList) {
-				searchRequestBuilder.addSort(
-						fieldInfo.get("field")
-						, "asc".equals(fieldInfo.get("sort")) ? SortOrder.ASC : SortOrder.DESC);
-			}
-		}
+		searchRequest.source(commonSearchSourceBuilderWithPage(currentPage, pageSize, startTime, endTime, fields, sortFieldList, matchPhrase, highlightFieldList, matchStr));
 
-		BoolQueryBuilder boolQuery = QueryBuilders.boolQuery();
-
-		if (startTime > 0 && endTime > 0) {
-			boolQuery.must(QueryBuilders.rangeQuery("timestamp")
-					.format("epoch_millis")
-					.from(startTime)
-					.to(endTime)
-					.includeLower(true)
-					.includeUpper(true));
-		}
-
-		// 查询字段
-		if (StringUtils.isNotEmpty(matchStr)) {
-			for (String s : matchStr.split(",")) {
-				if (matchPhrase == Boolean.TRUE) {
-					boolQuery.must(QueryBuilders.matchPhraseQuery(s.split("=")[0], s.split("=")[1]));
-				} else {
-					boolQuery.must(QueryBuilders.matchQuery(s.split("=")[0], s.split("=")[1]));
-				}
-			}
-		}
-
-		searchRequestBuilder.setQuery(QueryBuilders.matchAllQuery());
-		searchRequestBuilder.setQuery(boolQuery);
-
-		if (null != highlightFieldList && !highlightFieldList.isEmpty()) {
-			HighlightBuilder highlightBuilder = new HighlightBuilder();
-			highlightBuilder.preTags("<span class='high-light' >");/* 设置前缀 */
-			highlightBuilder.postTags("</span>");/* 设置后缀 */
-			for (String field : highlightFieldList) {
-				highlightBuilder.field(field);
-			}
-			searchRequestBuilder.highlighter(highlightBuilder);
-		}
-
-		// 分页应用
-		searchRequestBuilder.setFrom(currentPage).setSize(pageSize);
-
-		// 设置是否按查询匹配度排序
-		searchRequestBuilder.setExplain(true);
-
-		//打印的内容 可以在 Elasticsearch head 和 Kibana  上执行查询
-		log.info("\n{}", searchRequestBuilder);
-
-		// 执行搜索,返回搜索响应信息
-		SearchResponse searchResponse = searchRequestBuilder.execute().actionGet();
-
+		SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
 		long totalHits = searchResponse.getHits().totalHits;
 		long length = searchResponse.getHits().getHits().length;
 
 		log.debug("共查询到[{}]条数据,处理数据条数[{}]", totalHits, length);
 
-		if (searchResponse.status().getStatus() == 200) {
-			// 解析对象
-			List<Map<String, Object>> sourceList = setSearchResponse(searchResponse);
+		List<Map<String, Object>> sourceList = highLightHandler(searchResponse);
+		return new EsPage(currentPage, pageSize, (int) totalHits, sourceList);
+	}
 
-			return new EsPage(currentPage, pageSize, (int) totalHits, sourceList);
+	/**
+	 * 使用分词查询,并分页
+	 *
+	 * @param currentPage        当前页
+	 * @param pageSize           每页显示条数
+	 * @param startTime          开始时间
+	 * @param endTime            结束时间
+	 * @param fields             需要显示的字段，逗号分隔（缺省为全部字段）
+	 * @param sortFieldList      排序字段
+	 * @param matchPhrase        true 使用，短语精准匹配
+	 * @param highlightFieldList 高亮字段
+	 * @param matchStr           过滤条件（xxx=111,aaa=222）
+	 * @return
+	 */
+	private static SearchSourceBuilder commonSearchSourceBuilderWithPage(int currentPage, int pageSize, long startTime, long endTime, String fields, List<Map<String, String>> sortFieldList, boolean matchPhrase, List<String> highlightFieldList, String matchStr) {
+		SearchSourceBuilder searchSourceBuilder = commonSearchSourceBuilderBasic(startTime, endTime, fields, sortFieldList, matchPhrase, highlightFieldList, matchStr);
+		searchSourceBuilder.from(currentPage).size(pageSize);
+		return searchSourceBuilder;
+	}
+
+	/**
+	 * 查询条件（基础条件）
+	 *
+	 * @param startTime          开始时间
+	 * @param endTime            结束时间
+	 * @param fields             需要显示的字段，逗号分隔（缺省为全部字段）
+	 * @param sortFieldList      排序字段
+	 * @param matchPhrase        true 使用，短语精准匹配
+	 * @param highlightFieldList 高亮字段
+	 * @param matchStr           过滤条件（xxx=111,aaa=222）
+	 * @return
+	 */
+	private static SearchSourceBuilder commonSearchSourceBuilderBasic(long startTime, long endTime, String fields, List<Map<String, String>> sortFieldList, boolean matchPhrase, List<String> highlightFieldList, String matchStr) {
+		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+
+		/* 字段与时间限制 */
+		searchSourceBuilder = rangeFilterCondition(searchSourceBuilder, startTime, endTime, matchStr, matchPhrase);
+
+		/* 高亮 */
+		if (null != highlightFieldList && !highlightFieldList.isEmpty()) {
+			searchSourceBuilder = highLightCondition(searchSourceBuilder, highlightFieldList);
 		}
 
-		return null;
+		/* 字段 */
+		if (StringUtils.isNotEmpty(fields)) {
+			searchSourceBuilder.fetchSource(fields.split(","), null);
+		}
+		/* 是否带有源码 */
+		searchSourceBuilder.fetchSource(true);
 
+		/* 排序字段 */
+		if (null != sortFieldList && sortFieldList.size() > 0) {
+			for (Map<String, String> fieldInfo : sortFieldList) {
+				searchSourceBuilder.sort(
+						fieldInfo.get("field")
+						, "asc".equals(fieldInfo.get("sort")) ? SortOrder.ASC : SortOrder.DESC);
+			}
+		}
+		log.debug("\n{}", JSONObject.toJSONString(searchSourceBuilder));
+
+		return searchSourceBuilder;
+	}
+
+	/**
+	 * 查询条件（限制结果大小）
+	 *
+	 * @param startTime          开始时间
+	 * @param endTime            结束时间
+	 * @param size               文档大小限制
+	 * @param fields             需要显示的字段，逗号分隔（缺省为全部字段）
+	 * @param sortFieldList      排序字段
+	 * @param matchPhrase        true 使用，短语精准匹配
+	 * @param highlightFieldList 高亮字段
+	 * @param matchStr           过滤条件（xxx=111,aaa=222）
+	 * @return
+	 */
+	private static SearchSourceBuilder commonSearchSourceBuilderWithRetSizeLimit(long startTime, long endTime, Integer size, String fields, List<Map<String, String>> sortFieldList, boolean matchPhrase, List<String> highlightFieldList, String matchStr) {
+		SearchSourceBuilder searchSourceBuilder = commonSearchSourceBuilderBasic(startTime, endTime, fields, sortFieldList, matchPhrase, highlightFieldList, matchStr);
+		if (size != null && size > 0) {
+			searchSourceBuilder.size(size);
+		}
+		return searchSourceBuilder;
 	}
 
 	/**
@@ -463,7 +345,7 @@ public class ElasticsearchUtil {
 	 *
 	 * @param searchResponse
 	 */
-	private static List<Map<String, Object>> setSearchResponse(SearchResponse searchResponse) {
+	private static List<Map<String, Object>> highLightHandler(SearchResponse searchResponse) {
 		List<Map<String, Object>> sourceList = new ArrayList<>();
 		for (SearchHit searchHit : searchResponse.getHits().getHits()) {
 			searchHit.getSourceAsMap().put("id", searchHit.getId());
@@ -489,5 +371,57 @@ public class ElasticsearchUtil {
 		return sourceList;
 	}
 
+	/**
+	 * 查询字段与结果集时间范围
+	 *
+	 * @param startTime   开始时间
+	 * @param endTime     结束时间
+	 * @param matchPhrase true 使用，短语精准匹配
+	 * @param matchStr    过滤条件（xxx=111,aaa=222）
+	 * @return
+	 */
+	private static SearchSourceBuilder rangeFilterCondition(SearchSourceBuilder searchSourceBuilder, long startTime, long endTime, String matchStr, boolean matchPhrase) {
+		BoolQueryBuilder boolQuery = QueryBuilders.boolQuery();
+		if (startTime > 0 && endTime > 0) {
+			boolQuery.must(QueryBuilders.rangeQuery("timestamp")
+					.format("epoch_millis")
+					.from(startTime)
+					.to(endTime)
+					.includeLower(true)
+					.includeUpper(true)
+			);
+		}
 
+		if (StringUtils.isNotEmpty(matchStr)) {
+			for (String s : matchStr.split(",")) {
+				String[] ss = s.split("=");
+				if (ss.length > 1) {
+					if (matchPhrase == Boolean.TRUE) {
+						boolQuery.must(QueryBuilders.matchPhraseQuery(s.split("=")[0], s.split("=")[1]));
+					} else {
+						boolQuery.must(QueryBuilders.matchQuery(s.split("=")[0], s.split("=")[1]));
+					}
+				}
+
+			}
+		}
+		return searchSourceBuilder.query(boolQuery);
+	}
+
+	/**
+	 * 高亮处理
+	 *
+	 * @param searchSourceBuilder 原始条件
+	 * @param highlightFieldList  高亮字段列表
+	 * @return
+	 */
+	private static SearchSourceBuilder highLightCondition(SearchSourceBuilder searchSourceBuilder, List<String> highlightFieldList) {
+		HighlightBuilder highlightBuilder = new HighlightBuilder();
+		highlightBuilder.preTags("<span style='color:red' >");//设置前缀
+		highlightBuilder.postTags("</span>");//设置后缀
+		for (String field : highlightFieldList) {
+			highlightBuilder.field(field);
+		}
+		return searchSourceBuilder.highlighter(highlightBuilder);
+	}
 }

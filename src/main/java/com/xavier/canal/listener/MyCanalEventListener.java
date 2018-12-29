@@ -8,8 +8,6 @@ import com.xavier.starter.canal.annotation.ListenPoint;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.Objects;
-
 @Slf4j
 @CanalEventListener
 public class MyCanalEventListener {
@@ -20,9 +18,8 @@ public class MyCanalEventListener {
 	private ElasticSearchReduceService elasticSearchReduceService;
 
 	@ListenPoint
-	public void onEvent(String tableName, CanalEntry.EventType eventType, CanalEntry.RowData rowData) {
-		log.info("Database changed , table name is {}", tableName);
-		Objects.requireNonNull(eventType);
+	public void onEvent(String tableName, CanalEntry.EventType eventType, CanalEntry.RowData rowData) throws Exception {
+		log.debug("Table name is {}", tableName);
 		switch (eventType) {
 			case INSERT:
 				elasticSearchSyncService.insert(tableName, rowData);

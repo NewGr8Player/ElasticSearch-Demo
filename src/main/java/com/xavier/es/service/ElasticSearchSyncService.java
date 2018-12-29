@@ -7,6 +7,7 @@ import com.xavier.es.util.ElasticsearchUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,7 +26,7 @@ public class ElasticSearchSyncService {
 	 * @param tableName
 	 * @param rowData
 	 */
-	public void insert(String tableName, CanalEntry.RowData rowData) {
+	public void insert(String tableName, CanalEntry.RowData rowData) throws Exception {
 		/* 索引是否存在 */
 		if (!ElasticsearchUtil.isIndexExist(tableName)) {
 			ElasticsearchUtil.createIndex(tableName);
@@ -46,7 +47,7 @@ public class ElasticSearchSyncService {
 	 * @param tableName
 	 * @param rowData
 	 */
-	public void update(String tableName, CanalEntry.RowData rowData) {
+	public void update(String tableName, CanalEntry.RowData rowData) throws IOException {
 		/* 索引是否存在 */
 		if (!ElasticsearchUtil.isIndexExist(tableName)) {
 			ElasticsearchUtil.createIndex(tableName);
@@ -70,7 +71,7 @@ public class ElasticSearchSyncService {
 	 * @see com.xavier.es.service.ElasticSearchSyncService#update(String, CanalEntry.RowData)
 	 */
 	@Deprecated
-	public void delete(String tableName, CanalEntry.RowData rowData) {
+	public void delete(String tableName, CanalEntry.RowData rowData) throws IOException {
 		/* 索引是否存在 */
 		if (!ElasticsearchUtil.isIndexExist(tableName)) {
 			log.info("索引不存在:{}-{}", tableName, "ElasticSearchSyncService#delete");

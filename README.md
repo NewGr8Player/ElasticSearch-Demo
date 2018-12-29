@@ -4,12 +4,6 @@
 
 # 配置说明
 ```yaml
-# elasticsearch部分 请查看官方文档
-spring:
-  data:
-    elasticsearch:
-      cluster-name: elasticsearch
-      cluster-nodes: 127.0.0.1:9300
 # canal部分
 canal:
   client:
@@ -22,6 +16,8 @@ canal:
         zookeeper-address: # 当集群模式开启时，需要填写该地址,多个使用逗号分隔
 # 自定义配置
 sync:
+  elasticsearch:
+  
   config:
     mapping: # 下面包含第一层List，是单表的配置
       - enabled: true # 是否启用 boolean

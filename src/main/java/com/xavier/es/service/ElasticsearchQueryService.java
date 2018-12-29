@@ -35,7 +35,7 @@ public class ElasticsearchQueryService {
 	 */
 	public EsPage pageQuery(String index, String type, int currentPage, int pageSize, long startTime, long endTime,
 	                         String fields, List<Map<String, String>> sortFieldList, boolean matchPhrase, List<String> highlightFieldList,
-	                         String matchStr) {
+	                         String matchStr) throws Exception {
 		return ElasticsearchUtil.searchDataPage(index, type, currentPage, pageSize, startTime, endTime,
 				fields, sortFieldList, matchPhrase, highlightFieldList
 				, matchStr);
