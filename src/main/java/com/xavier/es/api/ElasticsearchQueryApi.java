@@ -28,8 +28,8 @@ public class ElasticsearchQueryApi {
 
 	@ApiOperation(value = "根据传入条件进行分页查询", httpMethod = "POST")
 	@ApiImplicitParams({
-			@ApiImplicitParam(name = "index", value = "索引名称", paramType = "query", dataType = "String", example = "index"),
-			@ApiImplicitParam(name = "type", value = "类型名称", paramType = "query", dataType = "String", example = "typeA,typeB"),
+			@ApiImplicitParam(name = "index", value = "索引名称(必须全小写)", paramType = "query", dataType = "String", example = "index"),
+			@ApiImplicitParam(name = "type", value = "类型名称(必须全小写)", paramType = "query", dataType = "String", example = "typeA,typeB"),
 			@ApiImplicitParam(name = "currentPage", value = "当前页", paramType = "query", dataType = "String", example = "1"),
 			@ApiImplicitParam(name = "pageSize", value = "每页显示条数", paramType = "query", dataType = "String", example = "20"),
 			@ApiImplicitParam(name = "fields", value = "需要显示的字段", paramType = "query", dataType = "String", example = "fieldA,fieldB"),

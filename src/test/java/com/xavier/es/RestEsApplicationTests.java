@@ -115,7 +115,10 @@ public class RestEsApplicationTests {
 	 */
 	@Test
 	public void searchDataByIdTest() throws IOException {
-		Map<String, Object> map = ElasticsearchUtil.searchDataById("test_index", "about_test", "id=11", null);
+		Map<String, Object> map = ElasticsearchUtil.searchDataById(
+				"pt_petition_case",
+				"pt_petition_case",
+				"1008611", null);
 		System.out.println(JSONObject.toJSONString(map));
 	}
 

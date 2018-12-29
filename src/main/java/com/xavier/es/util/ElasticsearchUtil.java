@@ -37,10 +37,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 
 /**
@@ -121,17 +118,18 @@ public class ElasticsearchUtil {
 	 * 数据添加，正定ID
 	 *
 	 * @param jsonObject 要增加的数据
-	 * @param index      索引，类似数据库
+	 * @param indexName      索引，类似数据库
 	 * @param type       类型，类似表
 	 * @param id         数据ID
 	 * @return
 	 */
-	public static String addData(JSONObject jsonObject, String index, String type, String id) throws Exception {
-		index = index.toLowerCase();
-		type = type.toLowerCase();
-		IndexRequest indexRequest = new IndexRequest(index, type, id).source(jsonObject, XContentType.JSON);
+	public static String addData(JSONObject jsonObject, String indexName, String type, String id) throws Exception {
+		if (!isIndexExist(indexName)) {
+			createIndex(indexName);
+		}
+		IndexRequest indexRequest = new IndexRequest(indexName, type, id).source(jsonObject, XContentType.JSON);
 		IndexResponse ret = client.index(indexRequest, RequestOptions.DEFAULT);
-		log.debug("Insert index:{},type:{},id={},result:{}", index, type, ret.getId(), ret.getResult());
+		log.debug("Insert index:{},type:{},id={},result:{}", indexName, type, ret.getId(), ret.getResult());
 		return ret.getId();
 	}
 
@@ -171,7 +169,8 @@ public class ElasticsearchUtil {
 	 */
 	public static void updateDataById(JSONObject jsonObject, String index, String type, String id) throws IOException {
 		UpdateRequest updateRequest = new UpdateRequest(index, type, id)
-				.doc(jsonObject);
+				.doc(jsonObject)
+				.upsert(jsonObject);/* 如果没找到就插入一条新数据 */
 		UpdateResponse ret = client.update(updateRequest, RequestOptions.DEFAULT);
 		log.debug("Update index:{},type:{},id={},result:{}", index, type, id, ret.getResult());
 	}
@@ -187,7 +186,7 @@ public class ElasticsearchUtil {
 	 */
 	public static Map<String, Object> searchDataById(String index, String type, String id, String fields) throws IOException {
 		GetRequest getRequest = new GetRequest(index, type, id)
-				.fetchSourceContext(new FetchSourceContext(true, fields.split(","), null));
+				.fetchSourceContext(new FetchSourceContext(true, Optional.ofNullable(fields).orElse("").split(","), null));
 		GetResponse ret = client.get(getRequest, RequestOptions.DEFAULT);
 		return ret.getSourceAsMap();
 	}

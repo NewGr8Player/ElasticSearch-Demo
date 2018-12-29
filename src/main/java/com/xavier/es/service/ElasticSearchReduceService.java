@@ -19,6 +19,11 @@ public class ElasticSearchReduceService {
 	 */
 	public static final String PT_PETITION_PERSON_CASE = "pt_petition_person_case";
 
+	/**
+	 * 信访件表名称
+	 */
+	public static final String PT_PETITION_CASE = "pt_petition_case";
+
 	public void reduce(String tableName, CanalEntry.RowData rowData, CanalEntry.EventType eventType) throws Exception {
 		switch (tableName) {
 			case "pt_petition_person":
@@ -43,8 +48,8 @@ public class ElasticSearchReduceService {
 
 		String id = (String) dataMap.get("petition_case_id");
 		/* 信访件 */
-		Map<String, Object> petitionCaseMap = ElasticsearchUtil.searchDataById(PT_PETITION_PERSON_CASE, PT_PETITION_PERSON_CASE, id, "");
-		petitionCaseMap.remove("id");
+		Map<String, Object> petitionCaseMap = ElasticsearchUtil.searchDataById(PT_PETITION_CASE, PT_PETITION_CASE, id, "");
+		dataMap.remove("id");
 		dataMap.putAll(petitionCaseMap);
 		/* 信访件状态排序 */
 		dataMap.put("petition_status_code_sort", selfDefineCode((String) petitionCaseMap.get("petition_status_code")));
@@ -57,10 +62,10 @@ public class ElasticSearchReduceService {
 
 		switch (eventType) {
 			case INSERT:
-				ElasticsearchUtil.addData(JSONObject.parseObject(JSON.toJSONString(dataMap)), PT_PETITION_PERSON_CASE, PT_PETITION_PERSON_CASE, PT_PETITION_PERSON_CASE + dataMap.get("id"));
+				ElasticsearchUtil.addData(JSONObject.parseObject(JSON.toJSONString(dataMap)), PT_PETITION_PERSON_CASE, PT_PETITION_PERSON_CASE, (String) dataMap.get("id"));
 				break;
 			case UPDATE:
-				ElasticsearchUtil.addData(JSONObject.parseObject(JSON.toJSONString(dataMap)), PT_PETITION_PERSON_CASE, PT_PETITION_PERSON_CASE, PT_PETITION_PERSON_CASE + dataMap.get("id"));
+				ElasticsearchUtil.addData(JSONObject.parseObject(JSON.toJSONString(dataMap)), PT_PETITION_PERSON_CASE, PT_PETITION_PERSON_CASE, (String) dataMap.get("id"));
 				break;
 			case DELETE:
 				ElasticsearchUtil.deleteDataById(PT_PETITION_PERSON_CASE, PT_PETITION_PERSON_CASE, (String) dataMap.get("id"));
