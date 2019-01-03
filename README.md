@@ -16,10 +16,10 @@ canal:
         zookeeper-address: # 当集群模式开启时，需要填写该地址,多个使用逗号分隔
 # 自定义配置
 sync:
-  elasticsearch:
-    host: 127.0.0.1
-    port: 9200
-    schema: http
+  elasticsearch: # Elasticsearch配置
+    host: 127.0.0.1 #ES地址
+    port: 9200 # ES端口
+    schema: http # ES使用协议(使用Rest-client使用http)
   config:
     mapping: # 下面包含第一层List，是单表的配置
       - enabled: true # 是否启用 boolean
@@ -40,6 +40,10 @@ sync:
 - 使用canal解析MySQL的binlog并存入ElasticSearch
 - 定制化字段名称与是否显示（TODO）
 - 提供简单查询接口
+
+# sql文件夹
+日志支持存入数据库，sql文件夹下为结构初始化脚本
+参数值参考JDBC
 
 # TODO
 后期有计划将各部分解耦，使用消息队列（Kafka/RabbitMQ等）进行通信。

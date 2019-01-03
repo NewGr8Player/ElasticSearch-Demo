@@ -34,6 +34,6 @@ public class MyCanalEventListener {
 				log.debug("Not monitored action value:{},rowData:{}", eventType.getNumber(), rowData);
 				break;
 		}
-		elasticSearchReduceService.reduce(tableName, rowData, eventType);
+		elasticSearchReduceService.reduce(tableName, rowData, eventType);// TODO 消息队列解耦！
 	}
 }
