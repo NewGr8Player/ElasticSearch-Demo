@@ -162,17 +162,20 @@ public class ElasticsearchUtil {
 	 * 通过ID 更新数据
 	 *
 	 * @param jsonObject 要增加的数据
-	 * @param index      索引，类似数据库
+	 * @param indexName      索引，类似数据库
 	 * @param type       类型，类似表
 	 * @param id         数据ID
 	 * @return
 	 */
-	public static void updateDataById(JSONObject jsonObject, String index, String type, String id) throws IOException {
-		UpdateRequest updateRequest = new UpdateRequest(index, type, id)
+	public static void updateDataById(JSONObject jsonObject, String indexName, String type, String id) throws IOException {
+		if (!isIndexExist(indexName)) {
+			createIndex(indexName);
+		}
+		UpdateRequest updateRequest = new UpdateRequest(indexName, type, id)
 				.doc(jsonObject)
 				.upsert(jsonObject);/* 如果没找到就插入一条新数据 */
 		UpdateResponse ret = client.update(updateRequest, RequestOptions.DEFAULT);
-		log.debug("Update index:{},type:{},id={},result:{}", index, type, id, ret.getResult());
+		log.debug("Update index:{},type:{},id={},result:{}", indexName, type, id, ret.getResult());
 	}
 
 	/**
@@ -309,7 +312,7 @@ public class ElasticsearchUtil {
 		if (null != sortFieldList && sortFieldList.size() > 0) {
 			for (Map<String, String> fieldInfo : sortFieldList) {
 				searchSourceBuilder.sort(
-						fieldInfo.get("field")
+						fieldInfo.get("field") + ".keyword"
 						, "asc".equals(fieldInfo.get("sort")) ? SortOrder.ASC : SortOrder.DESC);
 			}
 		}

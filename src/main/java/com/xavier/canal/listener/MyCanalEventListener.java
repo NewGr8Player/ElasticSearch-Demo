@@ -19,21 +19,25 @@ public class MyCanalEventListener {
 
 	@ListenPoint
 	public void onEvent(String tableName, CanalEntry.EventType eventType, CanalEntry.RowData rowData) throws Exception {
-		log.debug("Table name is {}", tableName);
-		switch (eventType) {
-			case INSERT:
-				elasticSearchSyncService.insert(tableName, rowData);
-				break;
-			case UPDATE:
-				elasticSearchSyncService.update(tableName, rowData);
-				break;
-			case DELETE:
-				elasticSearchSyncService.delete(tableName, rowData);
-				break;
-			default:
-				log.debug("Not monitored action value:{},rowData:{}", eventType.getNumber(), rowData);
-				break;
+		try{
+			log.debug("Table name is {}", tableName);
+			switch (eventType) {
+				case INSERT:
+					elasticSearchSyncService.insert(tableName, rowData);
+					break;
+				case UPDATE:
+					elasticSearchSyncService.update(tableName, rowData);
+					break;
+				case DELETE:
+					elasticSearchSyncService.delete(tableName, rowData);
+					break;
+				default:
+					log.debug("Not monitored action value:{},rowData:{}", eventType.getNumber(), rowData);
+					break;
+			}
+			elasticSearchReduceService.reduce(tableName, rowData, eventType);// TODO 消息队列解耦！
+		} catch (Exception e){
+			e.printStackTrace();
 		}
-		elasticSearchReduceService.reduce(tableName, rowData, eventType);// TODO 消息队列解耦！
 	}
 }

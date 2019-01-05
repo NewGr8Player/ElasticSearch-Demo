@@ -5,8 +5,10 @@ import com.alibaba.fastjson.JSONObject;
 import com.alibaba.otter.canal.protocol.CanalEntry;
 import com.xavier.es.util.ElasticsearchUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.client.utils.DateUtils;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,10 +25,14 @@ public class ElasticSearchReduceService {
 	 * 信访件表名称
 	 */
 	public static final String PT_PETITION_CASE = "pt_petition_case";
+	/**
+	 * 信访人
+	 */
+	public static final String PT_PETITION_PERSON = "pt_petition_person";
 
 	public void reduce(String tableName, CanalEntry.RowData rowData, CanalEntry.EventType eventType) throws Exception {
 		switch (tableName) {
-			case "pt_petition_person":
+			case PT_PETITION_PERSON:
 				petitionPersonWithCase(rowData, eventType);
 				break;
 		}
@@ -49,7 +55,6 @@ public class ElasticSearchReduceService {
 		String id = (String) dataMap.get("petition_case_id");
 		/* 信访件 */
 		Map<String, Object> petitionCaseMap = ElasticsearchUtil.searchDataById(PT_PETITION_CASE, PT_PETITION_CASE, id, "");
-		dataMap.remove("id");
 		dataMap.putAll(petitionCaseMap);
 		/* 信访件状态排序 */
 		dataMap.put("petition_status_code_sort", selfDefineCode((String) petitionCaseMap.get("petition_status_code")));
