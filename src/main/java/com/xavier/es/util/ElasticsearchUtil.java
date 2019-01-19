@@ -25,6 +25,8 @@ import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.aggregations.AggregationBuilder;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
@@ -118,7 +120,7 @@ public class ElasticsearchUtil {
 	 * 数据添加，正定ID
 	 *
 	 * @param jsonObject 要增加的数据
-	 * @param indexName      索引，类似数据库
+	 * @param indexName  索引，类似数据库
 	 * @param type       类型，类似表
 	 * @param id         数据ID
 	 * @return
@@ -162,7 +164,7 @@ public class ElasticsearchUtil {
 	 * 通过ID 更新数据
 	 *
 	 * @param jsonObject 要增加的数据
-	 * @param indexName      索引，类似数据库
+	 * @param indexName  索引，类似数据库
 	 * @param type       类型，类似表
 	 * @param id         数据ID
 	 * @return
@@ -247,6 +249,53 @@ public class ElasticsearchUtil {
 		}
 
 		searchRequest.source(commonSearchSourceBuilderWithPage(currentPage, pageSize, startTime, endTime, fields, sortFieldList, matchPhrase, highlightFieldList, matchStr));
+
+		SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
+		long totalHits = searchResponse.getHits().totalHits;
+		long length = searchResponse.getHits().getHits().length;
+
+		log.debug("共查询到[{}]条数据,处理数据条数[{}]", totalHits, length);
+
+		List<Map<String, Object>> sourceList = highLightHandler(searchResponse);
+		return new EsPage(currentPage, pageSize, (int) totalHits, sourceList);
+	}
+
+	/**
+	 * 使用分词查询,并分页
+	 *
+	 * @param index              索引名称
+	 * @param type               类型名称,可传入多个type逗号分隔
+	 * @param currentPage        当前页
+	 * @param pageSize           每页显示条数
+	 * @param startTime          开始时间
+	 * @param endTime            结束时间
+	 * @param fields             需要显示的字段，逗号分隔（缺省为全部字段）
+	 * @param sortFieldList      排序字段
+	 * @param matchPhrase        true 使用，短语精准匹配
+	 * @param highlightFieldList 高亮字段
+	 * @param matchStr           过滤条件（xxx=111,aaa=222）
+	 * @return
+	 */
+	public static EsPage searchDataPageGrouped(String index, String type, int currentPage, int pageSize, long startTime, long endTime, String fields, List<Map<String, String>> sortFieldList, boolean matchPhrase, List<String> highlightFieldList, String matchStr, String groupField) throws Exception {
+		SearchRequest searchRequest = new SearchRequest(index);
+		if (StringUtils.isNotEmpty(type)) {
+			searchRequest.types(type.split(","));
+		}
+
+		searchRequest.source(
+				groupCondition(
+						commonSearchSourceBuilderWithPage(currentPage
+								, pageSize
+								, startTime
+								, endTime
+								, fields
+								, sortFieldList
+								, matchPhrase
+								, highlightFieldList
+								, matchStr)
+						, groupField
+				)
+		);
 
 		SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
 		long totalHits = searchResponse.getHits().totalHits;
@@ -426,4 +475,17 @@ public class ElasticsearchUtil {
 		}
 		return searchSourceBuilder.highlighter(highlightBuilder);
 	}
+
+	/**
+	 * 聚合处理
+	 *
+	 * @param searchSourceBuilder 原始条件
+	 * @param fieldName           字段名
+	 * @return
+	 */
+	private static SearchSourceBuilder groupCondition(SearchSourceBuilder searchSourceBuilder, String fieldName) {
+		AggregationBuilder aggregation = AggregationBuilders.terms(fieldName + "_count").field("fieldName");
+		return searchSourceBuilder.aggregation(aggregation);
+	}
+
 }

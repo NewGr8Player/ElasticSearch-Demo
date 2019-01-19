@@ -5,33 +5,34 @@ import com.alibaba.fastjson.JSONObject;
 import com.alibaba.otter.canal.protocol.CanalEntry;
 import com.xavier.es.util.ElasticsearchUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.http.client.utils.DateUtils;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.xavier.config.BasicTableName.PT_PETITION_CASE;
+import static com.xavier.config.BasicTableName.PT_PETITION_PERSON;
+import static com.xavier.config.ReduceTableName.PT_PETITION_PERSON_CASE_REDUCE;
+
+/**
+ * 信访件信访人信息聚合
+ *
+ * @author NewGr8Player
+ */
 @Slf4j
 @Service
-public class ElasticSearchReduceService {
+public class ElasticSearchPersonCaseReduceService {
 
 	/**
-	 * 重复件聚合表名称
+	 * 数据聚合
+	 *
+	 * @param tableName 表名
+	 * @param rowData   数据
+	 * @param eventType 事件类型
+	 * @throws Exception
 	 */
-	public static final String PT_PETITION_PERSON_CASE = "pt_petition_person_case";
-
-	/**
-	 * 信访件表名称
-	 */
-	public static final String PT_PETITION_CASE = "pt_petition_case";
-	/**
-	 * 信访人
-	 */
-	public static final String PT_PETITION_PERSON = "pt_petition_person";
-
 	public void reduce(String tableName, CanalEntry.RowData rowData, CanalEntry.EventType eventType) throws Exception {
-		switch (tableName) {
+		switch (tableName.toLowerCase()) {
 			case PT_PETITION_PERSON:
 				petitionPersonWithCase(rowData, eventType);
 				break;
@@ -39,7 +40,7 @@ public class ElasticSearchReduceService {
 	}
 
 	/**
-	 * 插入主访人与信访件信息联合文档
+	 * 操作主访人与信访件信息联合文档
 	 *
 	 * @param rowData
 	 */
@@ -60,20 +61,20 @@ public class ElasticSearchReduceService {
 		dataMap.put("petition_status_code_sort", selfDefineCode((String) petitionCaseMap.get("petition_status_code")));
 
 		/* 索引是否存在 */
-		if (!ElasticsearchUtil.isIndexExist(PT_PETITION_PERSON_CASE)) {
-			ElasticsearchUtil.createIndex(PT_PETITION_PERSON_CASE);
-			log.info("创建索引:{}-{}", PT_PETITION_PERSON_CASE, "ElasticSearchReduceService#petitionPersonWithCase");
+		if (!ElasticsearchUtil.isIndexExist(PT_PETITION_PERSON_CASE_REDUCE)) {
+			ElasticsearchUtil.createIndex(PT_PETITION_PERSON_CASE_REDUCE);
+			log.info("创建索引:{}-{}", PT_PETITION_PERSON_CASE_REDUCE, "ElasticSearchReduceService#petitionPersonWithCase");
 		}
 
 		switch (eventType) {
 			case INSERT:
-				ElasticsearchUtil.addData(JSONObject.parseObject(JSON.toJSONString(dataMap)), PT_PETITION_PERSON_CASE, PT_PETITION_PERSON_CASE, (String) dataMap.get("id"));
+				ElasticsearchUtil.addData(JSONObject.parseObject(JSON.toJSONString(dataMap)), PT_PETITION_PERSON_CASE_REDUCE, PT_PETITION_PERSON_CASE_REDUCE, (String) dataMap.get("id"));
 				break;
 			case UPDATE:
-				ElasticsearchUtil.addData(JSONObject.parseObject(JSON.toJSONString(dataMap)), PT_PETITION_PERSON_CASE, PT_PETITION_PERSON_CASE, (String) dataMap.get("id"));
+				ElasticsearchUtil.addData(JSONObject.parseObject(JSON.toJSONString(dataMap)), PT_PETITION_PERSON_CASE_REDUCE, PT_PETITION_PERSON_CASE_REDUCE, (String) dataMap.get("id"));
 				break;
 			case DELETE:
-				ElasticsearchUtil.deleteDataById(PT_PETITION_PERSON_CASE, PT_PETITION_PERSON_CASE, (String) dataMap.get("id"));
+				ElasticsearchUtil.deleteDataById(PT_PETITION_PERSON_CASE_REDUCE, PT_PETITION_PERSON_CASE_REDUCE, (String) dataMap.get("id"));
 				break;
 		}
 	}

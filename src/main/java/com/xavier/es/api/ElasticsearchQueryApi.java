@@ -36,7 +36,8 @@ public class ElasticsearchQueryApi {
 			@ApiImplicitParam(name = "sortField", value = "排序字段", paramType = "query", dataType = "String", example = "sort::asc,sort2::desc"),
 			@ApiImplicitParam(name = "matchPhrase", value = "短语精准匹配", paramType = "query", dataType = "String", example = "true"),
 			@ApiImplicitParam(name = "highlightFields", value = "高亮字段", paramType = "query", dataType = "String", example = "hla,hlb,hlc"),
-			@ApiImplicitParam(name = "matchStr", value = "过滤条件", paramType = "query", dataType = "String", example = "xxx=111,aaa=222")
+			@ApiImplicitParam(name = "matchStr", value = "过滤条件", paramType = "query", dataType = "String", example = "xxx=111,aaa=222"),
+			@ApiImplicitParam(name = "groupField", value = "聚合条件(不填写，不聚合)", paramType = "query", dataType = "String", example = "fieldName")
 	})
 	@PostMapping(path = "/page")
 	public EsPage pageQuery(@RequestParam(name = "index") String index,
@@ -47,7 +48,9 @@ public class ElasticsearchQueryApi {
 	                        @RequestParam(name = "sortField", defaultValue = "") String sortField,
 	                        @RequestParam(name = "matchPhrase", defaultValue = "false") String matchPhrase,
 	                        @RequestParam(name = "highlightFields", defaultValue = "", required = false) String highlightFields,
-	                        @RequestParam(name = "matchStr") String matchStr) {
+	                        @RequestParam(name = "matchStr") String matchStr,
+	                        @RequestParam(name = "groupField") String groupField
+	) {
 		int currentPageNum = Integer.valueOf(currentPage);
 		int pageSizeNum = Integer.valueOf(pageSize);
 		boolean matchPhraseBoolean = Boolean.valueOf(matchPhrase);
@@ -66,10 +69,18 @@ public class ElasticsearchQueryApi {
 				})
 				.collect(Collectors.toList());
 		try {
-			return ElasticsearchUtil.searchDataPage(index, type,
-					currentPageNum, pageSizeNum, 0, 0,
-					fields, sortFieldList, matchPhraseBoolean, highlightFieldList
-					, matchStr);
+			if (StringUtils.isNotBlank(groupField)) {
+				return ElasticsearchUtil.searchDataPageGrouped(index, type,
+						currentPageNum, pageSizeNum, 0, 0,
+						fields, sortFieldList, matchPhraseBoolean, highlightFieldList
+						, matchStr, groupField);
+			} else {
+				return ElasticsearchUtil.searchDataPage(index, type,
+						currentPageNum, pageSizeNum, 0, 0,
+						fields, sortFieldList, matchPhraseBoolean, highlightFieldList
+						, matchStr);
+			}
+
 		} catch (Exception e) {
 			e.printStackTrace();
 			return new EsPage();
