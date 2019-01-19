@@ -238,6 +238,8 @@ public class ElasticSearchHighLevelQueryReduceService {
 		);
 		String id = dataMap.get("id") + "_" + tableName + "_" + dataMap.get("id");
 		dataMap.put("id", id);
+		dataMap.put("petition_case_id",dataMap.get("id"));/* 信访件id */
+		dataMap.put("petition_case_no",dataMap.get("no"));/* 信访件no */
 		/* 索引是否存在 */
 		if (!ElasticsearchUtil.isIndexExist(PT_PETITION_HIGH_LEVEL_REDUCE)) {
 			ElasticsearchUtil.createIndex(PT_PETITION_HIGH_LEVEL_REDUCE);
