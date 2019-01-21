@@ -129,6 +129,10 @@ public class ElasticsearchUtil {
 		if (!isIndexExist(indexName)) {
 			createIndex(indexName);
 		}
+		if (StringUtils.isBlank(id)) {
+			id = uuid();
+			log.warn("未传入id，重新生成id{}", id);
+		}
 		IndexRequest indexRequest = new IndexRequest(indexName, type, id).source(jsonObject, XContentType.JSON);
 		IndexResponse ret = client.index(indexRequest, RequestOptions.DEFAULT);
 		log.debug("Insert index:{},type:{},id={},result:{}", indexName, type, ret.getId(), ret.getResult());
@@ -144,7 +148,7 @@ public class ElasticsearchUtil {
 	 * @return
 	 */
 	public static String addData(JSONObject jsonObject, String index, String type) throws Exception {
-		return addData(jsonObject, index, type, UUID.randomUUID().toString().replaceAll("-", "").toUpperCase());
+		return addData(jsonObject, index, type, uuid());
 	}
 
 	/**
@@ -361,7 +365,7 @@ public class ElasticsearchUtil {
 		if (null != sortFieldList && sortFieldList.size() > 0) {
 			for (Map<String, String> fieldInfo : sortFieldList) {
 				searchSourceBuilder.sort(
-						fieldInfo.get("field") + ".keyword"
+						fieldInfo.get("field")
 						, "asc".equals(fieldInfo.get("sort")) ? SortOrder.ASC : SortOrder.DESC);
 			}
 		}
@@ -486,6 +490,15 @@ public class ElasticsearchUtil {
 	private static SearchSourceBuilder groupCondition(SearchSourceBuilder searchSourceBuilder, String fieldName) {
 		AggregationBuilder aggregation = AggregationBuilders.terms(fieldName + "_count").field("fieldName");
 		return searchSourceBuilder.aggregation(aggregation);
+	}
+
+	/**
+	 * 生成uuid
+	 *
+	 * @return
+	 */
+	private static String uuid() {
+		return UUID.randomUUID().toString().replaceAll("-", "").toUpperCase();
 	}
 
 }

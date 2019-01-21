@@ -49,7 +49,7 @@ public class ElasticsearchQueryApi {
 	                        @RequestParam(name = "matchPhrase", defaultValue = "false") String matchPhrase,
 	                        @RequestParam(name = "highlightFields", defaultValue = "", required = false) String highlightFields,
 	                        @RequestParam(name = "matchStr") String matchStr,
-	                        @RequestParam(name = "groupField") String groupField
+	                        @RequestParam(name = "groupField",defaultValue = "") String groupField
 	) {
 		int currentPageNum = Integer.valueOf(currentPage);
 		int pageSizeNum = Integer.valueOf(pageSize);

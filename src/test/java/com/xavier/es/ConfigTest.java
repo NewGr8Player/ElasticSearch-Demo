@@ -18,7 +18,7 @@ public class ConfigTest extends RestEsApplicationTests {
 	}
 
 	@Test
-	public void optionalTest(){
+	public void optionalTest() {
 		String fields = null;
 		fields = Optional.ofNullable(fields).orElse("");
 		System.out.println(fields);

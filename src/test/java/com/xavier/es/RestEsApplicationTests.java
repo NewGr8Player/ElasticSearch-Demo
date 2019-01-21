@@ -6,6 +6,8 @@ import com.xavier.es.util.ElasticsearchUtil;
 import com.xavier.es.util.EsPage;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
+import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.common.xcontent.XContentFactory;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -243,7 +245,7 @@ public class RestEsApplicationTests {
 		/* 不建议使用这个方法！仅供本身查询使用 */
 		RestTemplate restTemplate = new RestTemplate();
 
-		String sql = "SELECT * FROM test_index";
+		String sql = "SELECT * FROM test_index ORDER BY NAME DESC";
 
 		MultiValueMap<String, Object> headers = new LinkedMultiValueMap<String, Object>();
 		headers.add("Accept", "application/json");

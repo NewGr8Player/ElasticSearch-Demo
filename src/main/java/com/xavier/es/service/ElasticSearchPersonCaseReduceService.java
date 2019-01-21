@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import static com.xavier.config.BasicTableName.PT_PETITION_CASE;
 import static com.xavier.config.BasicTableName.PT_PETITION_PERSON;
@@ -55,7 +56,9 @@ public class ElasticSearchPersonCaseReduceService {
 
 		String id = (String) dataMap.get("petition_case_id");
 		/* 信访件 */
-		Map<String, Object> petitionCaseMap = ElasticsearchUtil.searchDataById(PT_PETITION_CASE, PT_PETITION_CASE, id, "");
+		Map<String, Object> petitionCaseMap = Optional
+				.ofNullable(ElasticsearchUtil.searchDataById(PT_PETITION_CASE, PT_PETITION_CASE, id, ""))
+				.orElse(new HashMap<>());
 		dataMap.putAll(petitionCaseMap);
 		/* 信访件状态排序 */
 		dataMap.put("petition_status_code_sort", selfDefineCode((String) petitionCaseMap.get("petition_status_code")));
@@ -86,7 +89,7 @@ public class ElasticSearchPersonCaseReduceService {
 	 * @return
 	 */
 	private String selfDefineCode(String code) {
-		switch (code) {
+		switch (Optional.ofNullable(code).orElse("")) {
 			case "14"://审核认定办结 14
 				code = "000";
 				break;
