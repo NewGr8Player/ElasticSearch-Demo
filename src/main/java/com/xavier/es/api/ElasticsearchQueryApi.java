@@ -11,10 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -83,7 +80,7 @@ public class ElasticsearchQueryApi {
 
 		} catch (Exception e) {
 			e.printStackTrace();
-			return new EsPage();
+			return new EsPage(0,0,0,new ArrayList<>());
 		}
 	}
 
