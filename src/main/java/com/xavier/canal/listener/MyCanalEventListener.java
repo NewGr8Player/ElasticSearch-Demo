@@ -25,7 +25,7 @@ public class MyCanalEventListener {
 	@ListenPoint
 	public void onEvent(String tableName, CanalEntry.EventType eventType, CanalEntry.RowData rowData) throws Exception {
 		try {
-			log.debug("Table name is {}", tableName);
+			log.info("Table name is {}", tableName);
 			switch (eventType) {
 				case INSERT:
 					elasticSearchSyncService.insert(tableName, rowData);
@@ -37,7 +37,7 @@ public class MyCanalEventListener {
 					elasticSearchSyncService.delete(tableName, rowData);
 					break;
 				default:
-					log.debug("Not monitored action value:{},rowData:{}", eventType.getNumber(), rowData);
+					log.info("Not monitored action value:{},rowData:{}", eventType.getNumber(), rowData);
 					break;
 			}
 			elasticSearchPersonCaseReduceService.reduce(tableName, rowData, eventType);/* 信访人-信访件聚合 */

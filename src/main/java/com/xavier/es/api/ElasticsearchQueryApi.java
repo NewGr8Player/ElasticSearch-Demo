@@ -77,7 +77,6 @@ public class ElasticsearchQueryApi {
 						fields, sortFieldList, matchPhraseBoolean, highlightFieldList
 						, matchStr);
 			}
-
 		} catch (Exception e) {
 			e.printStackTrace();
 			return new EsPage(0,0,0,new ArrayList<>());

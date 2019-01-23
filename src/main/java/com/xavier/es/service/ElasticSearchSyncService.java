@@ -35,7 +35,7 @@ public class ElasticSearchSyncService {
 		Map<String, Object> dataMap = new HashMap<>();
 		rowData.getAfterColumnsList().forEach(
 				column -> {
-					dataMap.put(column.getName(), column.getValue());//TODO 字段映射
+					dataMap.put(column.getName(), column.getValue());
 				}
 		);
 		ElasticsearchUtil.addData(JSONObject.parseObject(JSON.toJSONString(dataMap)), tableName, tableName, (String) dataMap.get("id"));
@@ -56,7 +56,7 @@ public class ElasticSearchSyncService {
 		Map<String, Object> dataMap = new HashMap<>();
 		rowData.getAfterColumnsList().forEach(
 				column -> {
-					dataMap.put(column.getName(), column.getValue());//TODO 字段映射
+					dataMap.put(column.getName(), column.getValue());
 				}
 		);
 		ElasticsearchUtil.updateDataById(JSONObject.parseObject(JSON.toJSONString(dataMap)), tableName, tableName, (String) dataMap.get("id"));

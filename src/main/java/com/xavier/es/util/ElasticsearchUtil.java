@@ -74,7 +74,7 @@ public class ElasticsearchUtil {
         GetIndexRequest request = new GetIndexRequest();
         request.indices(indexName);
         boolean exists = client.indices().exists(request, RequestOptions.DEFAULT);
-        log.debug("Index {} exist: {}", indexName, exists);
+        log.info("Index {} exist: {}", indexName, exists);
         return exists;
     }
 
@@ -86,7 +86,7 @@ public class ElasticsearchUtil {
      */
     public static boolean createIndex(String indexName) throws IOException {
         if (isIndexExist(indexName)) {
-            log.debug("Index is already exits!");
+            log.info("Index is already exits!");
             return true;
         } else {
             CreateIndexRequest request = new CreateIndexRequest(indexName);
@@ -103,7 +103,7 @@ public class ElasticsearchUtil {
      */
     public static boolean deleteIndex(String indexName) throws IOException {
         if (!isIndexExist(indexName)) {
-            log.debug("Index is not exits!");
+            log.info("Index is not exits!");
             return true;
         } else {
             try {
@@ -135,7 +135,7 @@ public class ElasticsearchUtil {
         }
         IndexRequest indexRequest = new IndexRequest(indexName, type, id).source(jsonObject, XContentType.JSON);
         IndexResponse ret = client.index(indexRequest, RequestOptions.DEFAULT);
-        log.debug("Insert index:{},type:{},id={},result:{}", indexName, type, ret.getId(), ret.getResult());
+        log.info("Insert index:{},type:{},id={},result:{}", indexName, type, ret.getId(), ret.getResult());
         return ret.getId();
     }
 
@@ -161,7 +161,7 @@ public class ElasticsearchUtil {
     public static void deleteDataById(String index, String type, String id) throws IOException {
         DeleteRequest deleteRequest = new DeleteRequest(index, type, id);
         DeleteResponse ret = client.delete(deleteRequest, RequestOptions.DEFAULT);
-        log.debug("Delete index:{},type:{},id={},result:{}", index, type, id, ret.getResult());
+        log.info("Delete index:{},type:{},id={},result:{}", index, type, id, ret.getResult());
     }
 
     /**
@@ -181,7 +181,7 @@ public class ElasticsearchUtil {
                 .doc(jsonObject)
                 .upsert(jsonObject);/* 如果没找到就插入一条新数据 */
         UpdateResponse ret = client.update(updateRequest, RequestOptions.DEFAULT);
-        log.debug("Update index:{},type:{},id={},result:{}", indexName, type, id, ret.getResult());
+        log.info("Update index:{},type:{},id={},result:{}", indexName, type, id, ret.getResult());
     }
 
     /**
@@ -225,7 +225,7 @@ public class ElasticsearchUtil {
         searchRequest.source(commonSearchSourceBuilderWithRetSizeLimit(startTime, endTime, size, fields, sortFieldList, matchPhrase, highlightFieldList, matchStr));
 
         SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
-        log.debug("共查询到[{}]条数据,处理数据条数[{}]", searchResponse.getHits().totalHits, searchResponse.getHits().getHits().length);
+        log.info("共查询到[{}]条数据,处理数据条数[{}]", searchResponse.getHits().totalHits, searchResponse.getHits().getHits().length);
 
         return highLightHandler(searchResponse);
     }
@@ -258,7 +258,7 @@ public class ElasticsearchUtil {
         long totalHits = searchResponse.getHits().totalHits;
         long length = searchResponse.getHits().getHits().length;
 
-        log.debug("共查询到[{}]条数据,处理数据条数[{}]", totalHits, length);
+        log.info("共查询到[{}]条数据,处理数据条数[{}]", totalHits, length);
 
         List<Map<String, Object>> sourceList = highLightHandler(searchResponse);
         return new EsPage(currentPage, pageSize, (int) totalHits, sourceList);
@@ -305,7 +305,7 @@ public class ElasticsearchUtil {
         long totalHits = searchResponse.getHits().totalHits;
         long length = searchResponse.getHits().getHits().length;
 
-        log.debug("共查询到[{}]条数据,处理数据条数[{}]", totalHits, length);
+        log.info("共查询到[{}]条数据,处理数据条数[{}]", totalHits, length);
 
         List<Map<String, Object>> sourceList = highLightHandler(searchResponse);
         return new EsPage(currentPage, pageSize, (int) totalHits, sourceList);
@@ -369,7 +369,7 @@ public class ElasticsearchUtil {
                         , "asc".equals(fieldInfo.get("sort")) ? SortOrder.ASC : SortOrder.DESC);
             }
         }
-        log.debug("\n{}", JSONObject.toJSONString(searchSourceBuilder));
+        log.info("\n{}", JSONObject.toJSONString(searchSourceBuilder));
 
         return searchSourceBuilder;
     }
@@ -409,7 +409,7 @@ public class ElasticsearchUtil {
             if (null != highlightFieldMap && !highlightFieldMap.isEmpty()) {
 
                 for (String highlightField : highlightFieldMap.keySet()) {
-                    log.debug("遍历 高亮结果集，覆盖 正常结果集{}", searchHit.getSourceAsMap());
+                    log.info("遍历 高亮结果集，覆盖 正常结果集{}", searchHit.getSourceAsMap());
                     Text[] text = searchHit.getHighlightFields().get(highlightField).getFragments();
                     StringBuffer stringBuffer = new StringBuffer();
                     if (text != null) {
@@ -475,7 +475,7 @@ public class ElasticsearchUtil {
      */
     private static SearchSourceBuilder highLightCondition(SearchSourceBuilder searchSourceBuilder, List<String> highlightFieldList) {
         HighlightBuilder highlightBuilder = new HighlightBuilder();
-        highlightBuilder.preTags("<span style='color:red' >");//设置前缀
+        highlightBuilder.preTags("<span class='high-light'>");//设置前缀
         highlightBuilder.postTags("</span>");//设置后缀
         for (String field : highlightFieldList) {
             highlightBuilder.field(field);

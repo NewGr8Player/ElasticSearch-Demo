@@ -199,7 +199,7 @@ public class ElasticSearchHighLevelQueryReduceService {
 		Map<String, Object> dataMap = new HashMap(protypeMap);
 		rowData.getAfterColumnsList().forEach(
 				column -> {
-					dataMap.put(column.getName(), column.getValue());//TODO 字段映射
+					dataMap.put(column.getName(), column.getValue());
 				}
 		);
 		String id = dataMap.get("petition_case_id") + "_" + tableName + "_" + dataMap.get("id");
@@ -214,7 +214,7 @@ public class ElasticSearchHighLevelQueryReduceService {
 				ElasticsearchUtil.addData(JSONObject.parseObject(JSON.toJSONString(dataMap)), PT_PETITION_HIGH_LEVEL_REDUCE, PT_PETITION_HIGH_LEVEL_REDUCE, (String) dataMap.get("id"));
 				break;
 			case UPDATE:
-				ElasticsearchUtil.addData(JSONObject.parseObject(JSON.toJSONString(dataMap)), PT_PETITION_HIGH_LEVEL_REDUCE, PT_PETITION_HIGH_LEVEL_REDUCE, (String) dataMap.get("id"));
+				ElasticsearchUtil.updateDataById(JSONObject.parseObject(JSON.toJSONString(dataMap)), PT_PETITION_HIGH_LEVEL_REDUCE, PT_PETITION_HIGH_LEVEL_REDUCE, (String) dataMap.get("id"));
 				break;
 			case DELETE:
 				ElasticsearchUtil.deleteDataById(PT_PETITION_HIGH_LEVEL_REDUCE, PT_PETITION_HIGH_LEVEL_REDUCE, (String) dataMap.get("id"));
@@ -233,7 +233,7 @@ public class ElasticSearchHighLevelQueryReduceService {
 		Map<String, Object> dataMap = new HashMap(protypeMap);
 		rowData.getAfterColumnsList().forEach(
 				column -> {
-					dataMap.put(column.getName(), column.getValue());//TODO 字段映射
+					dataMap.put(column.getName(), column.getValue());
 				}
 		);
 		String id = dataMap.get("id") + "_" + tableName + "_" + dataMap.get("id");
@@ -250,7 +250,7 @@ public class ElasticSearchHighLevelQueryReduceService {
 				ElasticsearchUtil.addData(JSONObject.parseObject(JSON.toJSONString(dataMap)), PT_PETITION_HIGH_LEVEL_REDUCE, PT_PETITION_HIGH_LEVEL_REDUCE, (String) dataMap.get("id"));
 				break;
 			case UPDATE:
-				ElasticsearchUtil.addData(JSONObject.parseObject(JSON.toJSONString(dataMap)), PT_PETITION_HIGH_LEVEL_REDUCE, PT_PETITION_HIGH_LEVEL_REDUCE, (String) dataMap.get("id"));
+				ElasticsearchUtil.updateDataById(JSONObject.parseObject(JSON.toJSONString(dataMap)), PT_PETITION_HIGH_LEVEL_REDUCE, PT_PETITION_HIGH_LEVEL_REDUCE, (String) dataMap.get("id"));
 				break;
 			case DELETE:
 				ElasticsearchUtil.deleteDataById(PT_PETITION_HIGH_LEVEL_REDUCE, PT_PETITION_HIGH_LEVEL_REDUCE, (String) dataMap.get("id"));
