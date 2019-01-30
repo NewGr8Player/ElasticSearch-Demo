@@ -122,16 +122,16 @@ public class ElasticSearchPersonCaseReduceService {
 	 * @return
 	 */
 	private String selfDefineCode(String code) {
-		switch (Optional.ofNullable(code).orElse("")) {
-			case "14"://审核认定办结 14
+		switch (Integer.valueOf(Optional.ofNullable(code).orElse("99"))) {
+			case 14://审核认定办结 14
 				code = "a";
 				break;
-			case "11"://复核 11
+			case 12://复核 12
 				code = "b";
 				break;
-			case "7":
+			case 8:
 				code = "c";
-				break;//复查 7
+				break;//复查 8
 			default:
 				code = "z";
 				break;
