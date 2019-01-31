@@ -38,9 +38,6 @@ public class ElasticSearchPersonCaseReduceService {
 			case PT_PETITION_PERSON:
 				petitionPersonWithCase(rowData, eventType);
 				break;
-			case PT_PETITION_CASE:
-				updatePetitionPersonCase(rowData, eventType);
-				break;
 		}
 	}
 
@@ -56,10 +53,11 @@ public class ElasticSearchPersonCaseReduceService {
 				column -> dataMap.put(column.getName(), column.getValue())
 		);
 
-		String id = (String) dataMap.get("petition_case_id");
-		if (StringUtils.isNotBlank(id)) {
+		String personId = (String) dataMap.get("id");
+		String petition_case_id = (String) dataMap.get("petition_case_id");
+		if (StringUtils.isNotBlank(petition_case_id)) {
 			/* 信访件 */
-			Map<String, Object> petitionCaseMap = ElasticsearchUtil.searchDataById(PT_PETITION_CASE, PT_PETITION_CASE, id, "");
+			Map<String, Object> petitionCaseMap = ElasticsearchUtil.searchDataById(PT_PETITION_CASE, PT_PETITION_CASE, petition_case_id, "");
 			dataMap.putAll(petitionCaseMap);
 			/* 信访件状态排序 */
 			dataMap.put("petition_status_code_sort", selfDefineCode((String) petitionCaseMap.get("petition_status_code")));
@@ -71,46 +69,18 @@ public class ElasticSearchPersonCaseReduceService {
 			log.info("创建索引:{}-{}", PT_PETITION_PERSON_CASE_REDUCE, "ElasticSearchReduceService#petitionPersonWithCase");
 		}
 
+		String reduceId = petition_case_id + "_" + personId;
+		String reduceTableName = PT_PETITION_PERSON_CASE_REDUCE;
+		String reduceTypeName = PT_PETITION_PERSON_CASE_REDUCE;
 		switch (eventType) {
 			case INSERT:
-				ElasticsearchUtil.addData(JSONObject.parseObject(JSON.toJSONString(dataMap)), PT_PETITION_PERSON_CASE_REDUCE, PT_PETITION_PERSON_CASE_REDUCE, (String) dataMap.get("id"));
+				ElasticsearchUtil.addData(JSONObject.parseObject(JSON.toJSONString(dataMap)), reduceTableName, reduceTypeName, reduceId);
 				break;
 			case UPDATE:
-				ElasticsearchUtil.updateDataById(JSONObject.parseObject(JSON.toJSONString(dataMap)), PT_PETITION_PERSON_CASE_REDUCE, PT_PETITION_PERSON_CASE_REDUCE, (String) dataMap.get("id"));
+				ElasticsearchUtil.updateDataById(JSONObject.parseObject(JSON.toJSONString(dataMap)), reduceTableName, reduceTypeName, reduceId);
 				break;
 			case DELETE:
-				ElasticsearchUtil.deleteDataById(PT_PETITION_PERSON_CASE_REDUCE, PT_PETITION_PERSON_CASE_REDUCE, (String) dataMap.get("id"));
-				break;
-		}
-	}
-
-	/**
-	 * 更新联合文档信访件信息
-	 *
-	 * @param rowData
-	 * @param eventType
-	 * @throws Exception
-	 */
-	private void updatePetitionPersonCase(CanalEntry.RowData rowData, CanalEntry.EventType eventType) throws Exception {
-		Map<String, Object> dataMap = new HashMap<>();
-		rowData.getAfterColumnsList().forEach(
-				column -> dataMap.put(column.getName(), column.getValue())
-		);
-
-		String id = (String) dataMap.get("id");
-		switch (eventType) {
-			case UPDATE:
-				if (StringUtils.isNotBlank(id)) {
-					/* 信访件 */
-					Map<String, Object> petitionCasePersonMap = ElasticsearchUtil.searchDataById(PT_PETITION_PERSON_CASE_REDUCE, PT_PETITION_PERSON_CASE_REDUCE, id, "");
-					petitionCasePersonMap.putAll(dataMap);
-					/* 信访件状态排序 */
-					dataMap.put("petition_status_code_sort", selfDefineCode((String) petitionCasePersonMap.get("petition_status_code")));
-					ElasticsearchUtil.updateDataById(JSONObject.parseObject(JSON.toJSONString(petitionCasePersonMap)), PT_PETITION_PERSON_CASE_REDUCE, PT_PETITION_PERSON_CASE_REDUCE, (String) dataMap.get("id"));
-				}
-				break;
-			case DELETE:
-				ElasticsearchUtil.deleteDataById(PT_PETITION_PERSON_CASE_REDUCE, PT_PETITION_PERSON_CASE_REDUCE, (String) dataMap.get("id"));
+				ElasticsearchUtil.deleteDataById(reduceTableName, reduceTypeName, reduceId);
 				break;
 		}
 	}
