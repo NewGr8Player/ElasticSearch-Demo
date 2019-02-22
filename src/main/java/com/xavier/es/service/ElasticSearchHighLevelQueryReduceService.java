@@ -7,8 +7,7 @@ import com.xavier.es.util.ElasticsearchUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static com.xavier.config.BasicTableName.*;
 import static com.xavier.config.ReduceTableName.PT_PETITION_HIGH_LEVEL_REDUCE;
@@ -176,15 +175,15 @@ public class ElasticSearchHighLevelQueryReduceService {
 	public void reduce(String tableName, CanalEntry.RowData rowData, CanalEntry.EventType eventType) throws Exception {
 		switch (tableName.toLowerCase()) {
 			case PT_PETITION_PERSON:/* 信访人 */
-			case PT_PETITION_STATUS:/* 信访件状态 */
+				/*case PT_PETITION_STATUS:*//* 信访件状态 */
 			case PT_REPLY_NOTICE:/* 回复 */
 			case PT_SATISFACTION:/* 满意度评价 */
 			case PT_TRANSACT_WAY:/* 办理方式 */
-				commonReduce(tableName,rowData,eventType);
+				commonReduce(tableName, rowData, eventType);
 				break;
-			case PT_PETITION_CASE:/* 信访件 */
+			/*case PT_PETITION_CASE:*//* 信访件 *//*
 				caseReduce(tableName,rowData,eventType);
-				break;
+				break;*/
 		}
 	}
 
@@ -202,7 +201,24 @@ public class ElasticSearchHighLevelQueryReduceService {
 					dataMap.put(column.getName(), column.getValue());
 				}
 		);
-		String id = dataMap.get("petition_case_id") + "_" + tableName + "_" + dataMap.get("id");
+		String petitionCaseId = (String) dataMap.get("petition_case_id");
+		/* 聚合信访件信息 */
+		Map petitionCaseInfoMap = ElasticsearchUtil.searchDataById(PT_PETITION_CASE, PT_PETITION_CASE, petitionCaseId, "");
+		dataMap.putAll(dataMapFilter(Optional.ofNullable(petitionCaseInfoMap).orElse(new HashMap())));
+		Map petitionStatusInfoMap = ElasticsearchUtil.searchDataById(PT_PETITION_STATUS, PT_PETITION_STATUS, petitionCaseId, "");
+		dataMap.putAll(dataMapFilter(Optional.ofNullable(petitionStatusInfoMap).orElse(new HashMap())));
+		Map petitionContentInfoMap = ElasticsearchUtil.searchDataById(PT_PETITION_CONTENT, PT_PETITION_CONTENT, petitionCaseId, "");
+		dataMap.putAll(dataMapFilter(Optional.ofNullable(petitionContentInfoMap).orElse(new HashMap())));
+		/* 聚合信访人信息 */
+		if (!Objects.equals(PT_PETITION_PERSON, tableName)) {
+			String matchStr = "main_flag=1,petition_case_id=" + petitionCaseId;
+			String personIndex = PT_PETITION_PERSON;
+			List<Map<String, Object>> personInfoList = ElasticsearchUtil.searchListData(personIndex, personIndex, 0, 0, 1, "", null, false, null, matchStr);
+			if (null != personInfoList && personInfoList.size() > 0) {
+				dataMap.putAll(personInfoList.get(0));
+			}
+		}
+		String id = petitionCaseId + "_" + tableName + "_" + dataMap.get("id");
 		dataMap.put("id", id);
 		/* 索引是否存在 */
 		if (!ElasticsearchUtil.isIndexExist(PT_PETITION_HIGH_LEVEL_REDUCE)) {
@@ -238,8 +254,8 @@ public class ElasticSearchHighLevelQueryReduceService {
 		);
 		String id = dataMap.get("id") + "_" + tableName + "_" + dataMap.get("id");
 		dataMap.put("id", id);
-		dataMap.put("petition_case_id",dataMap.get("id"));/* 信访件id */
-		dataMap.put("petition_case_no",dataMap.get("no"));/* 信访件no */
+		dataMap.put("petition_case_id", dataMap.get("id"));/* 信访件id */
+		dataMap.put("petition_case_no", dataMap.get("no"));/* 信访件no */
 		/* 索引是否存在 */
 		if (!ElasticsearchUtil.isIndexExist(PT_PETITION_HIGH_LEVEL_REDUCE)) {
 			ElasticsearchUtil.createIndex(PT_PETITION_HIGH_LEVEL_REDUCE);
@@ -258,4 +274,20 @@ public class ElasticSearchHighLevelQueryReduceService {
 		}
 	}
 
+	/**
+	 * 过滤传入源map，删除其中创建信息字段
+	 *
+	 * @param sourceMap
+	 * @return
+	 */
+	private Map<String, Object> dataMapFilter(Map<String, Object> sourceMap) {
+		if (sourceMap.containsKey(Field.CREATE_BY)) {
+			sourceMap.remove(Field.CREATE_BY);
+		}
+		if (sourceMap.containsKey(Field.CREATE_DATE)) {
+			sourceMap.remove(Field.CREATE_DATE);
+		}
+
+		return sourceMap;
+	}
 }

@@ -2,12 +2,11 @@ package com.xavier.es;
 
 import com.alibaba.fastjson.JSONObject;
 import com.xavier.EsApplication;
+import com.xavier.config.BasicTableName;
 import com.xavier.es.util.ElasticsearchUtil;
 import com.xavier.es.util.EsPage;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
-import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.common.xcontent.XContentFactory;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -240,6 +239,9 @@ public class RestEsApplicationTests {
 		System.out.println(JSONObject.toJSONString(esPage.getRecordList()));
 	}
 
+	/**
+	 * rest方式调用测试
+	 */
 	@Test
 	public void restRequestTest() {
 		/* 不建议使用这个方法！仅供本身查询使用 */
@@ -258,6 +260,11 @@ public class RestEsApplicationTests {
 		}
 	}
 
+	/**
+	 * 使用Stream分割ListMap测试
+	 *
+	 * @throws IOException
+	 */
 	@Test
 	public void splitToListStreamTest() throws IOException {
 		String highlightFields = "a1b,v,c,df";
@@ -270,6 +277,11 @@ public class RestEsApplicationTests {
 				);
 	}
 
+	/**
+	 * 使用Stream分割ListMap测试
+	 *
+	 * @throws IOException
+	 */
 	@Test
 	public void splitToListMapStreamTest() throws IOException {
 		String sortField = "a::asc,b::desc,c::asc";
@@ -288,6 +300,11 @@ public class RestEsApplicationTests {
 		sortFieldList.forEach(System.out::println);
 	}
 
+	/**
+	 * 异常测试
+	 *
+	 * @throws Exception
+	 */
 	@Test
 	public void exceptionTest() throws Exception {
 		Map map = new HashMap();
@@ -295,5 +312,16 @@ public class RestEsApplicationTests {
 			map.put(String.format("%10s", i), String.format("%10s", 100 - i));
 		}
 		ElasticsearchUtil.addData(JSONObject.parseObject(JSONObject.toJSONString(map)), "jlxf", "jlxf", "1008611");
+	}
+
+	/**
+	 * 批量获取
+	 */
+	@Test
+	public void multiGet() throws IOException {
+		String index = BasicTableName.PT_PETITION_CASE;
+		List idList = Arrays.asList();
+		List resultList = ElasticsearchUtil.findByIdList(index,index,idList);
+		System.out.println(resultList);
 	}
 }

@@ -18,6 +18,11 @@ public class BasicTableName {
 	public static final String PT_PETITION_STATUS = "pt_petition_status";
 
 	/**
+	 * 信访件概况大文本
+	 */
+	public static final String PT_PETITION_CONTENT = "pt_petition_content";
+
+	/**
 	 * 信访人
 	 */
 	public static final String PT_PETITION_PERSON = "pt_petition_person";
@@ -37,4 +42,27 @@ public class BasicTableName {
 	 */
 	public static final String PT_SATISFACTION = "pt_satisfaction";
 
+	/**
+	 * 基础字段
+	 */
+	public static class Field {
+		/**
+		 * 创建时间
+		 */
+		public static final String CREATE_DATE = "create_date";
+		/**
+		 * 创建人
+		 */
+		public static final String CREATE_BY = "create_by";
+
+		/**
+		 * 更新时间
+		 */
+		public static final String UPDATE_DATE = "update_date";
+
+		/**
+		 * 更新人
+		 */
+		public static final String UPDATE_BY = "update_by";
+	}
 }

@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -83,4 +84,21 @@ public class ElasticsearchQueryApi {
 		}
 	}
 
+	@ApiOperation(value = "根据传入id串进行查询", httpMethod = "POST")
+	@ApiImplicitParams({
+			@ApiImplicitParam(name = "index", value = "索引名称(必须全小写)", paramType = "query", dataType = "String", example = "index"),
+			@ApiImplicitParam(name = "type", value = "类型名称(必须全小写)", paramType = "query", dataType = "String", example = "typeA,typeB"),
+			@ApiImplicitParam(name = "ids", value = "id串", paramType = "query", dataType = "String", example = "hla,hlb,hlc")
+	})
+	@PostMapping("/findByIdList")
+	public List<Map<String, Object>> findByIdList(
+			@RequestParam(name = "index") String index,
+			@RequestParam(name = "type") String type,
+			@RequestParam("ids")String ids) throws IOException {
+		List<String> idList = Arrays.stream(ids.split(","))
+				.filter(StringUtils::isNotBlank)
+				.map(String::trim)
+				.collect(Collectors.toList());
+		return ElasticsearchUtil.findByIdList(index,type,idList);
+	}
 }
