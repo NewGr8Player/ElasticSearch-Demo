@@ -195,12 +195,8 @@ public class ElasticSearchHighLevelQueryReduceService {
 	 * @param eventType
 	 */
 	public void commonReduce(String tableName, CanalEntry.RowData rowData, CanalEntry.EventType eventType) throws Exception {
-		Map<String, Object> dataMap = new HashMap(protypeMap);
-		rowData.getAfterColumnsList().forEach(
-				column -> {
-					dataMap.put(column.getName(), column.getValue());
-				}
-		);
+		Map<String, Object> dataMap = canalDataTransMap(rowData,eventType);
+
 		String petitionCaseId = (String) dataMap.get("petition_case_id");
 		/* 聚合信访件信息 */
 		Map petitionCaseInfoMap = ElasticsearchUtil.searchDataById(PT_PETITION_CASE, PT_PETITION_CASE, petitionCaseId, "");
@@ -246,12 +242,7 @@ public class ElasticSearchHighLevelQueryReduceService {
 	 * @param eventType
 	 */
 	public void caseReduce(String tableName, CanalEntry.RowData rowData, CanalEntry.EventType eventType) throws Exception {
-		Map<String, Object> dataMap = new HashMap(protypeMap);
-		rowData.getAfterColumnsList().forEach(
-				column -> {
-					dataMap.put(column.getName(), column.getValue());
-				}
-		);
+		Map<String, Object> dataMap =  canalDataTransMap(rowData,eventType);
 		String id = dataMap.get("id") + "_" + tableName + "_" + dataMap.get("id");
 		dataMap.put("id", id);
 		dataMap.put("petition_case_id", dataMap.get("id"));/* 信访件id */
@@ -289,5 +280,29 @@ public class ElasticSearchHighLevelQueryReduceService {
 		}
 
 		return sourceMap;
+	}
+
+	/**
+	 * 获取变更数据（insert与update获取变更后列表，delete获取变更前列表）
+	 * @param rowData
+	 * @param eventType
+	 * @return
+	 */
+	private Map<String, Object> canalDataTransMap(CanalEntry.RowData rowData, CanalEntry.EventType eventType){
+		Map<String,Object> dataMap = new HashMap(protypeMap);
+		if(Objects.equals(CanalEntry.EventType.DELETE,eventType)){
+			rowData.getBeforeColumnsList().forEach(
+					column -> {
+						dataMap.put(column.getName(), column.getValue());
+					}
+			);
+		} else {
+			rowData.getAfterColumnsList().forEach(
+					column -> {
+						dataMap.put(column.getName(), column.getValue());
+					}
+			);
+		}
+		return dataMap;
 	}
 }

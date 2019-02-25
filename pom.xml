@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.xavier</groupId>
     <artifactId>es</artifactId>
-    <version>0.0.1-RC.1</version>
+    <version>0.0.1-RC.2</version>
     <packaging>jar</packaging>
     <name>es</name>
     <description>ElasticSearch Demo</description>
