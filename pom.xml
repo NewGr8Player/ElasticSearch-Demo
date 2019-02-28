@@ -28,9 +28,15 @@
     </properties>
 
     <repositories>
+        <!-- Canal-starter -->
         <repository>
             <id>xavier-maven-repo</id>
             <url>https://raw.githubusercontent.com/NewGr8Player/maven-repo/master/</url>
+        </repository>
+        <!-- Elasticsearch-sql support -->
+        <repository>
+            <id>elastic.co</id>
+            <url>https://artifacts.elastic.co/maven</url>
         </repository>
     </repositories>
 

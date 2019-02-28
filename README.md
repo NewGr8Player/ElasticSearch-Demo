@@ -46,4 +46,6 @@ sync:
 参数值参考JDBC
 
 # TODO
-后期有计划将各部分解耦，使用消息队列（Kafka/RabbitMQ等）进行通信。
+[ ] 后期有计划将各部分解耦，使用消息队列（Kafka/RabbitMQ等）进行通信。
+[ ] 将分页改为scroll Api
+[ ] 表字段名映射

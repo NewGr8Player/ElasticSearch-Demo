@@ -3,6 +3,7 @@ package com.xavier.es;
 import com.alibaba.fastjson.JSONObject;
 import com.xavier.EsApplication;
 import com.xavier.config.BasicTableName;
+import com.xavier.es.util.ElasticsearchSqlUtil;
 import com.xavier.es.util.ElasticsearchUtil;
 import com.xavier.es.util.EsPage;
 import org.apache.commons.lang3.StringUtils;
@@ -11,6 +12,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -244,16 +247,18 @@ public class RestEsApplicationTests {
 	 */
 	@Test
 	public void restRequestTest() {
-		/* 不建议使用这个方法！仅供本身查询使用 */
 		RestTemplate restTemplate = new RestTemplate();
 
-		String sql = "SELECT * FROM test_index ORDER BY NAME DESC";
+		String sql = "SELECT * FROM pt_petition_case WHERE petition_case_no.keyword LIKE 'LF%'";
 
-		MultiValueMap<String, Object> headers = new LinkedMultiValueMap<String, Object>();
-		headers.add("Accept", "application/json");
-		headers.add("Content-Type", "application/json");
-		String requestBody = "{\"sql\":\"" + sql + "\"}";
-		HttpEntity request = new HttpEntity(requestBody, headers);
+		HttpHeaders headers = new HttpHeaders();
+		MediaType type = MediaType.parseMediaType("application/json; charset=UTF-8");
+		headers.setContentType(type);
+		// String requestBody = "{\"sql\":\"" + sql + "\"}";
+		Map<String,String> map = new HashMap();
+		map.put("sql",sql);
+		String requestBody = JSONObject.toJSONString(map);
+		HttpEntity<String> request = new HttpEntity(requestBody, headers);
 		Map apiResponse = restTemplate.postForObject("http://127.0.0.1:9200/_sql", request, Map.class);
 		if (null != apiResponse.get("hits") && null != apiResponse.get("hits")) {
 			System.out.println(apiResponse.get("hits"));
@@ -323,5 +328,13 @@ public class RestEsApplicationTests {
 		List idList = Arrays.asList();
 		List resultList = ElasticsearchUtil.findByIdList(index,index,idList);
 		System.out.println(resultList);
+	}
+
+	@Test
+	public void perSqlTest(){
+		String sql = "SELECT * FROM pt_petition_case";
+		ElasticsearchSqlUtil.findPageBySql(sql,30,10).getRecordList().forEach(
+				System.out::println
+		);
 	}
 }
